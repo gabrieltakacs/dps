@@ -1,0 +1,15 @@
+proxy:
+  build: ./images/proxy
+  container_name: dps-proxy
+  ports:
+    - "80:80"
+discovery:
+  build: ./images/discovery
+  container_name: dps-discovery
+  ports:
+    - "80:80"
+#logger:
+#  build: ./images/logger
+#  container_name: dps-logger
+#  ports:
+#    - "80:80"
