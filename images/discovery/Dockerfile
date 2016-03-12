@@ -1,1 +1,2 @@
-FROM alpine:3.1
+FROM jplock/zookeeper
+MAINTAINER Gabriel Takacs <gtakacs@gtakacs.sk>
