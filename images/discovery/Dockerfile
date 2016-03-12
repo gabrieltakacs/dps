@@ -1,1 +1,1 @@
-FROM mesoscloud/zookeeper
+FROM alpine:3.1
