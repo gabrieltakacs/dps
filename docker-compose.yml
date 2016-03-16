@@ -6,6 +6,9 @@ proxy:
 discovery:
   build: ./zookeeper
   container_name: dps-zookeeper
+dynamo:
+  build: ./dynamo
+  container_name: dynamo
 elasticsearch:
   image: elasticsearch:2.2.1
   container_name: dps-elasticsearch
