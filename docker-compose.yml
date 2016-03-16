@@ -1,15 +1,34 @@
 proxy:
-  build: ./images/proxy
-  container_name: dps-proxy
+  build: ./traefik
+  container_name: dps-traefik
   ports:
     - "80:80"
 discovery:
-  build: ./images/discovery
-  container_name: dps-discovery
-#  ports:
-#    - "80:80"
-#logger:
-#  build: ./images/logger
-#  container_name: dps-logger
-#  ports:
-#    - "80:80"
+  build: ./zookeeper
+  container_name: dps-zookeeper
+elasticsearch:
+  image: elasticsearch:2.2.1
+  container_name: dps-elasticsearch
+  command: elasticsearch -Des.network.host=0.0.0.0
+  ports:
+      - "9200:9200"
+      - "9300:9300"
+logstash:
+  image: logstash:2.2.2
+  container_name: dps-logstash
+  command: logstash -f /etc/logstash/conf.d/logstash.conf
+  volumes:
+    - ./logstash/config:/etc/logstash/conf.d
+  ports:
+    - "5000:5000"
+  links:
+    - elasticsearch
+kibana:
+  build: ./kibana/
+  container_name: dps-kibana
+  volumes:
+    - ./kibana/config/:/opt/kibana/config/
+  ports:
+    - "5601:5601"
+  links:
+    - elasticsearch
