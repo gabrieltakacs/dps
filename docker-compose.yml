@@ -1,11 +1,17 @@
-proxy:
+traefik:
   build: ./traefik
   container_name: dps-traefik
+  volumes:
+    - ./traefik/config:/etc/traefik/
+    - /var/run/docker.sock:/var/run/docker.sock
   ports:
     - "80:80"
-discovery:
+    - "8080:8080"
+zookeeper:
   build: ./zookeeper
   container_name: dps-zookeeper
+  ports:
+    - "2181:2181"
 dynamo:
   build: ./dynamo
   container_name: dynamo
