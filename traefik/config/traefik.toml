@@ -8,8 +8,8 @@ address = ":8080"
 # Zookeeper configuration backend
 ################################################################
 [zookeeper]
-endpoint = "127.0.0.1:2181"
-#endpoint = "172.17.0.3:2181"
+#endpoint = "127.0.0.1:2181"
+endpoint = "172.17.0.2:2181"
 watch = true
 prefix = "/traefik"
 # filename = "zookeeper.tmpl"

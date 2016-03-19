@@ -6,15 +6,13 @@ traefik:
   ports:
     - "80:80"
     - "8080:8080"
-  links:
-    - "zookeeper"
 zookeeper:
   build: ./zookeeper
   container_name: dps-zookeeper
   ports:
     - "2181:2181"
-#  links:
-#    - "traefik"
+  links:
+    - "traefik"
 dynamo:
   build: ./dynamo
   container_name: dynamo
