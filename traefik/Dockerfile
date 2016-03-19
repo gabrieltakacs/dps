@@ -1,6 +1,6 @@
 FROM alpine:3.3
 
-RUN apk update && apk upgrade && apk add curl bash wget vim
+RUN apk update && apk upgrade && apk add curl bash wget vim iptables
 
 RUN cd / && wget http://github.com/containous/traefik/releases/download/v1.0.0-beta.247/traefik --quiet && chmod +x traefik
 EXPOSE 80
