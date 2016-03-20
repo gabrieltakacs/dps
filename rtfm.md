@@ -33,3 +33,7 @@
 * Configuration: /opt/zookeeper/conf/zoo.cfg
 * Bezi na porte 2181
 * Spusta sa automaticky pri spusteni containera
+
+##
+* spustenie traefiku inak, píše inú chybu
+*  /./traefik --zookeeper --zookeeper.endpoint 172.17.0.3:2181
