@@ -40,9 +40,20 @@
 
 # dynamo
 * stiahnuť:
+
     intellij (lepšie ultimate)
+
     Java 8 sdk
+
     http://groovy-lang.org/download.html
+
     https://grails.org/download.html
+    
 * otvoriť intellij - open dps project
-*
+* súbor .bashrc v home adresári - pridať:
+
+GRAILS_HOME=/home/miro/grails-3.1.4
+
+export GRAILS_HOME
+
+PATH=$PATH:$GRAILS_HOME/bin
