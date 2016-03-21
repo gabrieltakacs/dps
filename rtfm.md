@@ -37,3 +37,12 @@
 ##
 * spustenie traefiku inak, píše inú chybu
 *  /./traefik --zookeeper --zookeeper.endpoint 172.17.0.3:2181
+
+# dynamo
+* stiahnuť:
+    intellij (lepšie ultimate)
+    Java 8 sdk
+    http://groovy-lang.org/download.html
+    https://grails.org/download.html
+* otvoriť intellij - open dps project
+*
