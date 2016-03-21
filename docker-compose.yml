@@ -5,7 +5,6 @@ traefik:
     - ./traefik/config:/etc/traefik/
   ports:
     - "80:80"
-    - "8080:8080"
 zookeeper:
   build: ./zookeeper
   container_name: dps-zookeeper
@@ -16,6 +15,10 @@ zookeeper:
 dynamo:
   build: ./dynamo
   container_name: dynamo
+  volumes:
+    - ./dynamo/app/dynamo:/dynamo/
+  ports:
+    - "8080:8080"
 elasticsearch:
   image: elasticsearch:2.2.1
   container_name: dps-elasticsearch
