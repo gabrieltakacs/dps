@@ -7,6 +7,11 @@ FROM davidcaste/alpine-tomcat:tomcat8
 #RUN touch /var/log/keepalive
 #CMD ["tail", "-f", "/var/log/keepalive"]
 
+COPY app/dynamo /dynamo/
+RUN cd /dynamo && ./gradlew war
+RUN cp /dynamo/build/libs/*.war /opt/tomcat/webapps/
+RUN /opt/tomcat/bin/catalina.sh start
+
 ADD run.sh /run.sh
 RUN chmod 777 /run.sh
 CMD ["/run.sh"]

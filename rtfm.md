@@ -39,6 +39,7 @@
 *  /./traefik --zookeeper --zookeeper.endpoint 172.17.0.3:2181
 
 # dynamo
+* dynamo beží na http://127.0.0.1:8080/dynamo-0.1/
 * stiahnuť:
 
     intellij (lepšie ultimate)
@@ -58,4 +59,3 @@ export GRAILS_HOME
 
 PATH=$PATH:$GRAILS_HOME/bin
 
-* dynamo beží na http://127.0.0.1:8080/dynamo-0.1/

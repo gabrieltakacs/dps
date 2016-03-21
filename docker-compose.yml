@@ -15,8 +15,6 @@ zookeeper:
 dynamo:
   build: ./dynamo
   container_name: dynamo
-  volumes:
-    - ./dynamo/app/dynamo:/dynamo/
   ports:
     - "8080:8080"
 elasticsearch:
