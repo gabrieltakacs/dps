@@ -15,7 +15,11 @@ zookeeper:
     - "2181:2181"
   links:
     - "traefik"
-
+#dynamo:
+#  build: ./dynamo
+#  container_name: dynamo
+#  ports:
+#    - "8080:8080"
 elasticsearch:
   image: elasticsearch:2.2.1
   container_name: dps-elasticsearch

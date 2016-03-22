@@ -71,20 +71,20 @@ prefix = "/traefik"
 #
 # Optional
 #
-# traefikLogsFile = "log/traefik.log"
+traefikLogsFile = "log/traefik.log"
 
 # Access logs file
 #
 # Optional
 #
-# accessLogsFile = "log/access.log"
+accessLogsFile = "log/access.log"
 
 # Log level
 #
 # Optional
 # Default: "ERROR"
 #
-# logLevel = "ERROR"
+logLevel = "DEBUG"
 
 # Backends throttle duration: minimum duration between 2 events from providers
 # before applying a new configuration. It avoids unnecessary reloads if multiples events
