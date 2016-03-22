@@ -9,7 +9,7 @@ traefik:
 zookeeper:
   build: ./zookeeper
   container_name: dps-zookeeper
-  hostname: zookeeper
+  hostname: zookeeper.dev
   domainname: zookeeper.dev
   ports:
     - "2181:2181"
