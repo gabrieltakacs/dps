@@ -5,9 +5,12 @@ traefik:
     - ./traefik/config:/etc/traefik/
   ports:
     - "80:80"
+    - "8081:8080"
 zookeeper:
   build: ./zookeeper
   container_name: dps-zookeeper
+  hostname: zookeeper
+  domainname: zookeeper.dev
   ports:
     - "2181:2181"
   links:
