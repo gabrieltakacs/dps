@@ -1,0 +1,1 @@
+FROM rawmind/alpine-etcd
