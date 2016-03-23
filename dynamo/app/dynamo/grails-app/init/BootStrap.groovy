@@ -16,7 +16,6 @@ class BootStrap {
     def destroy = {
     }
 
-
     private static void registerInZookeeper() {
         CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper.dev:2181", new RetryOneTime(1000))
         curatorFramework.start()
