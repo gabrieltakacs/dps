@@ -8,7 +8,6 @@ address = ":8080"
 # Zookeeper configuration backend
 ################################################################
 [zookeeper]
-#endpoint = "127.0.0.1:2181"
 endpoint = "172.17.0.3:2181"
 watch = true
 prefix = "/traefik"
@@ -18,53 +17,14 @@ prefix = "/traefik"
 # Global configuration
 ################################################################
 
-# Entrypoints definition
-#
-# Optional
-# Default:
-# [entryPoints]
-#   [entryPoints.http]
-#   address = ":80"
-#
-# To redirect an http entrypoint to an https entrypoint (with SNI support):
-# [entryPoints]
-#   [entryPoints.http]
-#   address = ":80"
-#     [entryPoints.http.redirect]
-#       entryPoint = "https"
-#   [entryPoints.https]
-#   address = ":443"
-#     [entryPoints.https.tls]
-#       [[entryPoints.https.tls.certificates]]
-#       CertFile = "integration/fixtures/https/snitest.com.cert"
-#       KeyFile = "integration/fixtures/https/snitest.com.key"
-#       [[entryPoints.https.tls.certificates]]
-#       CertFile = "integration/fixtures/https/snitest.org.cert"
-#       KeyFile = "integration/fixtures/https/snitest.org.key"
-#
-# To redirect an entrypoint rewriting the URL:
-# [entryPoints]
-#   [entryPoints.http]
-#   address = ":80"
-#     [entryPoints.http.redirect]
-#       regex = "^http://localhost/(.*)"
-#       replacement = "http://mydomain/$1"
+defaultEntryPoints = ["http", "https"]
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+  [entryPoints.https]
+  address = ":443"
 
-# Entrypoints to be used by frontends that do not specify any entrypoint.
-# Each frontend can specify its own entrypoints.
-#
-# Optional
-# Default: ["http"]
-#
-# defaultEntryPoints = ["http", "https"]
-
-# Timeout in seconds.
-# Duration to give active requests a chance to finish during hot-reloads
-#
-# Optional
-# Default: 10
-#
-# graceTimeOut = 10
+graceTimeOut = 10
 
 # Traefik logs file
 # If not defined, logs to stdout
@@ -80,10 +40,6 @@ traefikLogsFile = "log/traefik.log"
 accessLogsFile = "log/access.log"
 
 # Log level
-#
-# Optional
-# Default: "ERROR"
-#
 logLevel = "DEBUG"
 
 # Backends throttle duration: minimum duration between 2 events from providers
@@ -102,3 +58,23 @@ logLevel = "DEBUG"
 # Default: http.DefaultMaxIdleConnsPerHost
 #
 # MaxIdleConnsPerHost = 200
+
+[file]
+[backends]
+  [backends.dynamo]
+    [backends.dynamo.LoadBalancer]
+      method = "drr"
+    [backends.dynamo.servers.server1]
+    url = "http://172.17.0.1:8080"
+    weight = 1
+    [backends.dynamo.servers.server2]
+    url = "http://www.azet.sk"
+    weight = 1
+    [backends.dynamo.servers.server3]
+    url = "http://www.google.sk"
+    weight = 1
+
+[frontends]
+  [frontends.frontend1]
+  entrypoints = ["http"]
+  backend = "dynamo"
