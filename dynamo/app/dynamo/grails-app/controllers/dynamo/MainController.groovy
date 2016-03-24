@@ -9,7 +9,7 @@ class MainController{
     def index() {
 
         JSONObject obj = new JSONObject();
-        log.info("Index");
+
         count++;
         obj.put("count", Integer.toString(count));
         render obj as JSON

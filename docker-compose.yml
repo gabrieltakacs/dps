@@ -33,9 +33,10 @@ kibana:
     - elasticsearch
 proxy:
   build: ./proxy
-  container_name: proxy
+  container_name: dps-proxy
+  ports:
+    - "8080:8080"
 #dynamo:
 #  build: ./dynamo
-#  container_name: dynamo
 #  ports:
 #    - "8080:8080"

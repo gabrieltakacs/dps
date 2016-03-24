@@ -35,8 +35,9 @@
 * Spusta sa automaticky pri spusteni containera
 
 ##
-* spustenie traefiku inak, píše inú chybu
-*  /./traefik --zookeeper --zookeeper.endpoint 172.17.0.3:2181
+* spustenie s viacerími inštanciami dynama:
+* docker-compose scale dynamo=5 up -d
+
 
 # dynamo
 * dynamo beží na http://127.0.0.1:8080/dynamo-0.1/
