@@ -7,7 +7,7 @@ import org.apache.curator.x.discovery.UriSpec
 
 class BootStrap {
 
-    private static final String basePath = "/traefik";
+    private static final String basePath = "/traefik/backends/dynamo/servers.";
 
     def init = { servletContext ->
 
@@ -22,11 +22,11 @@ class BootStrap {
         ServiceInstance<Void> serviceInstance = ServiceInstance.builder()
                 .uriSpec(new UriSpec("{scheme}://{address}:{port}"))
                 .address('localhost')
-                .port(8080)
-                .name("dynamo")
+                .port(System.getProperty('server.port').toInteger())//TODO zmeniť
+                .name("proxy")
                 .build()
         ServiceDiscoveryBuilder.builder(Void)
-                .basePath(basePath)
+                .basePath("MyProxy")
                 .client(curatorFramework)
                 .thisInstance(serviceInstance)
                 .build()
