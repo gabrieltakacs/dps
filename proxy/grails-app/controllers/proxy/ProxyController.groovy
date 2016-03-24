@@ -25,34 +25,24 @@ class ProxyController {
         serviceProvider.start()
     }
 
-    //ResourceLocator grailsResourceLocator
-
     def favicon() {
         render "404";
-       /* final Resource image = grailsResourceLocator.findResourceForURI('/images/favicon.ico')
-        render file: image.inputStream, contentType: 'image/ico'*/
     }
 
     def index() {
-
-        log.error("ALL: "+serviceProvider.getAllInstances());
         def instance = serviceProvider.getInstance()
         if(instance != null) {
             String address = instance.buildUriSpec()
             String URI = request.getRequestURI().toString();
-            //log.error("ADDRESS: "+address);
-            //log.error("URI: "+URI);
-            log.error(address+URI);
             try {
                 String response = (address + URI).toURL().getText()
                 render response
             } catch (Exception e) {
-                render "CHYBA "+e.getMessage();
+                render "ERROR"+e.getMessage();
             }
-
         } else {
             log.error("instance is null")
+            render "ERROR: no instance found!"
         }
-        return response
     }
 }
