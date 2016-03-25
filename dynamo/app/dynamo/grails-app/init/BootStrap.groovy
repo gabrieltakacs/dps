@@ -15,7 +15,7 @@ class BootStrap {
     }
 
     private static void registerInZookeeper() {
-        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper.dev:2181", new RetryNTimes(5, 1000))
+        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
         curatorFramework.start()
         ServiceInstance<Void> serviceInstance = ServiceInstance.builder()
                 .uriSpec(new UriSpec("{scheme}://{address}:{port}"))

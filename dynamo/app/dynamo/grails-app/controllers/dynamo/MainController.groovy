@@ -14,7 +14,7 @@ class MainController{
     private static int count = 0;
     static ServiceProvider serviceProvider
     static {
-        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper.dev:2181", new RetryNTimes(5, 1000))
+        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
         curatorFramework.start()
         ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder
                 .builder(Void)
@@ -49,7 +49,5 @@ class MainController{
         json.prettyPrint = true
         json.render response
     }
-
-
 
 }

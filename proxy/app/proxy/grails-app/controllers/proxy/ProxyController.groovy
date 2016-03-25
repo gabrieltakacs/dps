@@ -11,7 +11,7 @@ class ProxyController {
 
     static ServiceProvider serviceProvider
     static {
-        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper.dev:2181", new RetryNTimes(5, 1000))
+        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
         curatorFramework.start()
         ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder
                 .builder(Void)
@@ -34,10 +34,12 @@ class ProxyController {
         if(instance != null) {
             String address = instance.buildUriSpec()
             String URI = request.getRequestURI().toString();
+            log.info("Redirecting to "+URI);
             try {
                 String response = (address + URI).toURL().getText()
                 render response
             } catch (Exception e) {
+                log.error("error",e)
                 render "ERROR"+e.getMessage();
             }
         } else {
