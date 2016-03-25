@@ -1,15 +1,16 @@
 # Aktualny stav
 * Mame vytvorene vsetky containery s potrebnymi vecami
+* Mame nakodene vlastne jednoduche proxy
+* Mame nakodene "dynamo", ktore dokaze prijimat requesty, ale nic s nimi zatial nerobi
+* Mame rozbehane elstash
 
 # Aktualne problemy
-* Nevieme prepojit traefik so zookeeper. Vyzera to byt na chybu vo firewalle, ktory tam ani neviem ci mame :) Skusal som nainstalovat iptables, ale nejako to nefici.
 
-# TO-DO list (poradie je dolezite!)
-* Prepojenie traefik so zookeeper
-* Spravit zakladny node - implementaciu dynamo, zakladny REST klient. Zaklad by mozno mohol spravit Miro, on ma skusenosti s Javou a REST klientom v Jave.
-* Prepojit dynamo so zookeeper - keyword "zookeeper-client". Dynamo sa musi registrovat u zookeepera.
-* Nakonfigurovat zookeeper a traefik tak, aby traefik vedel, na ktory node posielat requesty.
-* Rozbehat zakladne logovanie
+# Todo:
+* Otestovat logovanie
+* Spravit, aby dynamo vedelo preposielat requesty na ine dynama
+* Zistit, ci to musi bezat na dvoch separatnych PCs, alebo ci sa ako virtualka mysli docker container
+* Vsetko skontrolovat a pripravit na odovzdavanie
 
 # Docker
 
