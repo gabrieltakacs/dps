@@ -25,6 +25,7 @@ logstash:
     - "5000"
   links:
     - elasticsearch
+    - zookeeper
 kibana:
   build: ./kibana/
   container_name: dps-kibana
