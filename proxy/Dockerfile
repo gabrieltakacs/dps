@@ -2,7 +2,7 @@ FROM davidcaste/alpine-tomcat:tomcat8
 
 COPY app/proxy /proxy/
 COPY logging.properties /opt/tomcat/conf/
-#RUN cd /proxy && ./gradlew war
+RUN cd /proxy && ./gradlew war
 RUN cp /proxy/build/libs/*.war /opt/tomcat/webapps/
 RUN rm -r proxy
 
