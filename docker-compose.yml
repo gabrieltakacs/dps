@@ -1,7 +1,7 @@
 zookeeper:
   build: ./zookeeper
   container_name: dps-zookeeper
-  hostname: zookeeper.dev
+  hostname: zookeeper
   ports:
     - "2181:2181"
 elasticsearch:
@@ -25,6 +25,7 @@ logstash:
     - "5000"
   links:
     - elasticsearch
+    - zookeeper
 kibana:
   build: ./kibana/
   container_name: dps-kibana
