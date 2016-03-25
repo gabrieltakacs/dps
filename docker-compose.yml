@@ -10,7 +10,6 @@ zookeeper:
   build: ./zookeeper
   container_name: dps-zookeeper
   hostname: zookeeper.dev
-  domainname: zookeeper.dev
   ports:
     - "2181:2181"
   links:
@@ -24,22 +23,27 @@ elasticsearch:
   image: elasticsearch:2.2.1
   container_name: dps-elasticsearch
   command: elasticsearch -Des.network.host=0.0.0.0
+  hostname: elasticsearch
   ports:
       - "9200:9200"
       - "9300:9300"
 logstash:
   image: logstash:2.2.2
+  hostname: logstash
   container_name: dps-logstash
   command: logstash -f /etc/logstash/conf.d/logstash.conf
   volumes:
     - ./logstash/config:/etc/logstash/conf.d
   ports:
     - "5000:5000"
+  expose:
+    - "5000"
   links:
     - elasticsearch
 kibana:
   build: ./kibana/
   container_name: dps-kibana
+  hostname: kibana
   volumes:
     - ./kibana/config/:/opt/kibana/config/
   ports:
