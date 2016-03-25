@@ -7,8 +7,6 @@ import org.apache.curator.x.discovery.UriSpec
 
 class BootStrap {
 
-    private static final String basePath = "/traefik/backends/dynamo/servers.";
-
     def init = { servletContext ->
 
         registerInZookeeper();
@@ -17,12 +15,13 @@ class BootStrap {
     }
 
     private static void registerInZookeeper() {
-        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper.dev:2181", new RetryOneTime(1000))
+        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("172.17.0.1:2181", new RetryOneTime(1000))
         curatorFramework.start()
         ServiceInstance<Void> serviceInstance = ServiceInstance.builder()
                 .uriSpec(new UriSpec("{scheme}://{address}:{port}"))
-                .address('localhost')
-                .port(System.getProperty('server.port').toInteger())//TODO zmeniť
+                .address(InetAddress.getLocalHost().getHostAddress())
+                //.port(System.getProperty('server.port').toInteger())//TODO zmeniť
+                .port(8080)
                 .name("proxy")
                 .build()
         ServiceDiscoveryBuilder.builder(Void)

@@ -1,8 +1,8 @@
 zookeeper:
   build: ./zookeeper
   container_name: dps-zookeeper
-  hostname: zookeeper.dev
-  domainname: zookeeper.dev
+  hostname: zookeeper
+  domainname: zookeeper.docker
   ports:
     - "2181:2181"
 elasticsearch:
@@ -35,8 +35,6 @@ proxy:
   build: ./proxy
   container_name: dps-proxy
   ports:
-    - "8080:8080"
-#dynamo:
-#  build: ./dynamo
-#  ports:
-#    - "8080:8080"
+    - "80:8080"
+dynamo:
+  build: ./dynamo

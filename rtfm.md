@@ -36,8 +36,10 @@
 
 ##
 * spustenie s viacerími inštanciami dynama:
-* docker-compose scale dynamo=5 up -d
-
+* docker-compose scale dynamo=3
+* docker-compose up -d
+* Delete all containers
+* docker rm $(docker ps -a -q)
 
 # dynamo
 * dynamo beží na http://127.0.0.1:8080/dynamo-0.1/

@@ -11,7 +11,7 @@ class ProxyController {
 
     static ServiceProvider serviceProvider
     static {
-        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("localhost:2181", new RetryNTimes(5, 1000))
+        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("172.17.0.1:2181", new RetryNTimes(5, 1000))
         curatorFramework.start()
         ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder
                 .builder(Void)

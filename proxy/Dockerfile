@@ -1,11 +1,13 @@
 FROM davidcaste/alpine-tomcat:tomcat8
 
 COPY app/proxy /proxy/
-RUN cd /proxy && ./gradlew war
+COPY logging.properties /opt/tomcat/conf/
+#RUN cd /proxy && ./gradlew war
 RUN cp /proxy/build/libs/*.war /opt/tomcat/webapps/
 RUN rm -r proxy
 
 EXPOSE 8080
+EXPOSE 2181
 
 ADD run.sh /run.sh
 RUN chmod 777 /run.sh
