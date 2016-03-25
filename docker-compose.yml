@@ -4,8 +4,6 @@ zookeeper:
   hostname: zookeeper.dev
   ports:
     - "2181:2181"
-  links:
-    - "traefik"
 elasticsearch:
   image: elasticsearch:2.2.1
   container_name: dps-elasticsearch
@@ -42,5 +40,9 @@ proxy:
   container_name: dps-proxy
   ports:
     - "80:8080"
+  links:
+    - zookeeper
 dynamo:
   build: ./dynamo
+  links:
+    - zookeeper
