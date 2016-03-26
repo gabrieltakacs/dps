@@ -40,7 +40,7 @@ class ProxyController {
                 render response
             } catch (Exception e) {
                 log.error("error",e)
-                render "ERROR"+e.getMessage();
+                render "ERROR: "+e.getMessage();
             }
         } else {
             log.error("instance is null")
