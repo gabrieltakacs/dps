@@ -5,7 +5,7 @@ COPY config/catalina.sh /opt/tomcat/bin/
 COPY libs/*.jar /opt/tomcat/bin/
 
 COPY app/proxy /proxy/
-#RUN cd /proxy && ./gradlew war
+RUN cd /proxy && ./gradlew war
 RUN cp /proxy/build/libs/*.war /opt/tomcat/webapps/
 RUN rm -r proxy
 
