@@ -14,18 +14,20 @@ class MainController{
     private static int count = 0;
     static ServiceProvider serviceProvider
     static {
+        log.info("starting service discovery");
         CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
         curatorFramework.start()
         ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder
                 .builder(Void)
-                .basePath("MyProxy")
+                .basePath("dynamoProxy")
                 .client(curatorFramework).build()
         serviceDiscovery.start()
         serviceProvider = serviceDiscovery
                 .serviceProviderBuilder()
-                .serviceName("proxy")
+                .serviceName("servers")
                 .build()
         serviceProvider.start()
+        log.info("service discovery started");
     }
 
     def index() {
@@ -33,6 +35,7 @@ class MainController{
     }
 
     def info() {
+        log.info("request - server info")
         count++;
 
         Map obj = new LinkedHashMap()
@@ -48,6 +51,10 @@ class MainController{
         def json = obj as JSON
         json.prettyPrint = true
         json.render response
+    }
+
+    def neighbours() {
+
     }
 
 }

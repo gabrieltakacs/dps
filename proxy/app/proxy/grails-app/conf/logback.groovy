@@ -11,7 +11,7 @@ appender('STDOUT', ConsoleAppender) {
 }
 
 appender("FILE", FileAppender) {
-    file = "testFile.log"
+    file = "logFile.log"
     append = false
     encoder(PatternLayoutEncoder) {
         pattern = "%level %logger - %msg%n"

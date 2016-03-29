@@ -59,7 +59,7 @@ dependencies {
     compile "org.hibernate:hibernate-ehcache"
     compile 'org.apache.curator:curator-x-discovery:2.9.1'
     compile 'org.apache.curator:curator-framework:2.9.1'
-
+    compile 'net.logstash.logback:logstash-logback-encoder:4.6'
     console "org.grails:grails-console"
     profile "org.grails.profiles:web:3.1.4"
     runtime "org.grails.plugins:asset-pipeline"

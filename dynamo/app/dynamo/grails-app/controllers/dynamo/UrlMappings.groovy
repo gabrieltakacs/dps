@@ -9,6 +9,7 @@ class UrlMappings {
             }
         }
         "/about"(controller: "Main", action: "info")
+        "/neighbours"(controller: "Main", action: "neighbours")
         "/"(view:"/index")
         "500"(view:'/error')
         "404"(view:'/notFound')
