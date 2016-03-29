@@ -1,9 +1,9 @@
-package dynamo;
+package dynamo
 
 /**
  * Created by miro on 3/29/16.
  */
-public class Settings {
+class Settings {
     private Settings() {
         throw new AssertionError();
     }
