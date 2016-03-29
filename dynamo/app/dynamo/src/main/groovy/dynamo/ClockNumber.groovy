@@ -4,9 +4,7 @@ class ClockNumber {
     private static Integer number = null;
 
     public static void setNumber(Integer number) {
-        if(number == null) {
-            this.number = number;
-        }
+        this.number = number;
     }
 
     public static Integer getNumber() {

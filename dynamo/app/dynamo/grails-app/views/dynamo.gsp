@@ -1,3 +1,4 @@
+<%@ page contentType="text/html;charset=UTF-8" %>
 <html>
 <head>
     <!-- Meta properties -->
@@ -26,13 +27,12 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">AJAX / AJAJ / JSON example</a>
+            <a class="navbar-brand" href="#">Dynamo</a>
         </div>
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-6">
             <ul class="nav navbar-nav">
-                <li><a href="http://fiit.gtakacs.sk">Home</a></li>
-                <li><a href="/ajax">AJAX</a></li>
-                <li><a href="/ajaj">AJAJ</a></li>
+                <li><a href="/about">Info</a></li>
+                <li><a href="/neighbours">Susedia</a></li>
             </ul>
         </div>
     </div>
