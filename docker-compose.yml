@@ -48,3 +48,4 @@ dynamo:
   build: ./dynamo
   links:
     - zookeeper
+    - logstash
