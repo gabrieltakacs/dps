@@ -11,7 +11,7 @@ class ProxyController {
 
     static ServiceProvider serviceProvider
     static {
-        log.info("starting service discovery");
+        //log.info("starting service discovery");
         CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
         curatorFramework.start()
         ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder
@@ -24,7 +24,7 @@ class ProxyController {
                 .serviceName("servers")
                 .build()
         serviceProvider.start()
-        log.info("service discovery started");
+        //log.info("service discovery started");
     }
 
     def favicon() {

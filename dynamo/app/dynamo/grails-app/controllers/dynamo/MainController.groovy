@@ -14,7 +14,7 @@ class MainController{
     private static int count = 0;
     static ServiceProvider serviceProvider
     static {
-        log.info("starting service discovery");
+        //log.info("starting service discovery");
         CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
         curatorFramework.start()
         ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder
@@ -26,8 +26,8 @@ class MainController{
                 .serviceProviderBuilder()
                 .serviceName("servers")
                 .build()
-        serviceProvider.start()
-        log.info("service discovery started");
+        serviceProvider.start();
+        //log.info("service discovery started");
     }
 
     def index() {
@@ -35,7 +35,7 @@ class MainController{
     }
 
     def info() {
-        log.info("request - server info")
+        log.info("request - server info");
         count++;
 
         Map obj = new LinkedHashMap()
