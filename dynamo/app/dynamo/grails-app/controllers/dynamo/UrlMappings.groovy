@@ -10,7 +10,7 @@ class UrlMappings {
         }
         "/about"(controller: "Main", action: "info")
         "/neighbours"(controller: "Main", action: "neighbours")
-        "/number"(controller: "Main", action: "getNumber")
+        "/number"(controller: "Main", action: "number")
         "/"(view:"/dynamo")
         "/default"(view:"/index")
         "500"(view:'/error')

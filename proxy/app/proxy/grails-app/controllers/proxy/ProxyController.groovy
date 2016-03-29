@@ -39,7 +39,7 @@ class ProxyController {
             URL url = (address + uri).toURL();
             log.info("Redirecting to "+url);
             try {
-                String response = url.getText()
+                String response = url.getText("UTF-8")
                 render response
             } catch (Exception e) {
                 log.error("ERROR while redirecting",e)

@@ -74,10 +74,10 @@ class MainController{
         json.render response
     }
 
-    def getNumber() {
+    def number() {
         log.info("request - get number")
         log.info("rendering number "+ClockNumber.getNumber())
-        render ClockNumber.getNumber();
+        render ClockNumber.getNumber().toString();
     }
 
 }

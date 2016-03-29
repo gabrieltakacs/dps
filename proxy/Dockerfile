@@ -4,6 +4,7 @@ COPY app/proxy /proxy/
 RUN cd /proxy && ./gradlew war
 RUN cp /proxy/build/libs/*.war /opt/tomcat/webapps/
 RUN rm -r proxy
+RUN export CATALINA_OPTS="-server -Dfile.encoding=UTF-8"
 
 EXPOSE 2181
 
