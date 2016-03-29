@@ -54,7 +54,29 @@ class MainController{
     }
 
     def neighbours() {
+        log.info("request - neighbours numbers")
 
+        Map obj = new LinkedHashMap()
+        for(ServiceInstance s:serviceProvider.allInstances) {
+            if(!InetAddress.getLocalHost().getHostAddress().equals(s.address)) {
+                String address = s.buildUriSpec()
+                URL url = (address + "number").toURL();
+                log.info("sending request to "+url);
+                try {
+                    obj.put(s.address, url.getText());
+                } catch (Exception e) {
+                    obj.put(s.address, "unknown");
+                    log.error("ERROR",e);
+                }
+            }
+        }
+        def json = obj as JSON
+        json.prettyPrint = true
+        json.render response
+    }
+
+    def getNumber() {
+        render ClockNumber.number;
     }
 
 }

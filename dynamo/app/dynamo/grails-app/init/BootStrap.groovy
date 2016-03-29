@@ -1,3 +1,5 @@
+import dynamo.ClockNumber
+import dynamo.Settings
 import org.apache.curator.framework.CuratorFramework
 import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.retry.RetryNTimes
@@ -10,7 +12,9 @@ class BootStrap {
     def init = { servletContext ->
 
         registerInZookeeper();
+        initDynamo();
     }
+
     def destroy = {
     }
 
@@ -29,5 +33,10 @@ class BootStrap {
                 .thisInstance(serviceInstance)
                 .build()
                 .start()
+    }
+
+    private static void initDynamo() {
+        //TODO zistiť čísla susedov
+        ClockNumber.setNumber(new Random().nextInt(Settings.maxClockNumber));
     }
 }
