@@ -59,7 +59,7 @@ class MainController{
         for(ServiceInstance s:serviceProvider.allInstances) {
             if(!InetAddress.getLocalHost().getHostAddress().equals(s.address)) {
                 String address = s.buildUriSpec()
-                URL url = (address + "number").toURL();
+                URL url = (address + "/number").toURL();
                 log.info("sending request to "+url);
                 try {
                     obj.put(s.address, url.getText());
