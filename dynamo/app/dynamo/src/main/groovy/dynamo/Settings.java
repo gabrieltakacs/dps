@@ -8,5 +8,5 @@ public class Settings {
         throw new AssertionError();
     }
 
-    public static final int maxClockNumber = 0x400;
+    public static final int maxClockNumber = 0x200;
 }

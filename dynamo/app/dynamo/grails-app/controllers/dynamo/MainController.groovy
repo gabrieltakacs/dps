@@ -37,7 +37,6 @@ class MainController{
     def info() {
         log.info("request - server info");
         count++;
-
         Map obj = new LinkedHashMap()
         obj.put("requestCount", Integer.toString(count));
         obj.put("server IP", InetAddress.getLocalHost().getHostAddress());
@@ -76,7 +75,9 @@ class MainController{
     }
 
     def getNumber() {
-        render ClockNumber.number;
+        log.info("request - get number")
+        log.info("rendering number "+ClockNumber.getNumber())
+        render ClockNumber.getNumber();
     }
 
 }

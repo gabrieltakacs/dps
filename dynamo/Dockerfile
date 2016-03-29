@@ -5,7 +5,6 @@ RUN cd /dynamo && ./gradlew war
 RUN cp /dynamo/build/libs/*.war /opt/tomcat/webapps/
 RUN rm -r dynamo
 
-EXPOSE 8080
 EXPOSE 2181
 
 ADD run.sh /run.sh

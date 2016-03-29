@@ -11,7 +11,8 @@ class UrlMappings {
         "/about"(controller: "Main", action: "info")
         "/neighbours"(controller: "Main", action: "neighbours")
         "/number"(controller: "Main", action: "getNumber")
-        "/"(view:"/index")
+        "/"(view:"/dynamo")
+        "/default"(view:"/index")
         "500"(view:'/error')
         "404"(view:'/notFound')
     }
