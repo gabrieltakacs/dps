@@ -17,16 +17,13 @@ appender("FILE", FileAppender) {
         pattern = "%level %logger - %msg%n"
     }
 }
-
+/*
 appender('LOGSTASH', LogstashTcpSocketAppender) {
     destination = "logstash:5000"
-    /*encoder(PatternLayoutEncoder) {
-        pattern = "%level %logger - %msg%n"
-    }*/
     encoder(LogstashEncoder)
 }
-
-root(DEBUG, ['FILE', 'LOGSTASH'])
+*/
+root(DEBUG, ['FILE'/*, 'LOGSTASH'*/])
 //root(ERROR, ['STDOUT'])
 
 def targetDir = BuildSettings.TARGET_DIR

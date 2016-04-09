@@ -61,6 +61,7 @@ dependencies {
     compile 'org.apache.curator:curator-x-discovery:2.9.1'
     compile 'org.apache.curator:curator-framework:2.9.1'
     compile 'net.logstash.logback:logstash-logback-encoder:4.6'
+    compile 'org.grails:grails-datastore-rest-client:5.0.0.RC2'
     profile "org.grails.profiles:web:3.1.4"
     runtime "org.grails.plugins:asset-pipeline"
     runtime "com.h2database:h2"

@@ -11,10 +11,8 @@ import org.apache.curator.x.discovery.ServiceProvider
 
 class MainController{
 
-    private static int count = 0;
     static ServiceProvider serviceProvider
     static {
-        //log.info("starting service discovery");
         CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
         curatorFramework.start()
         ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder
@@ -27,44 +25,33 @@ class MainController{
                 .serviceName("servers")
                 .build()
         serviceProvider.start();
-        //log.info("service discovery started");
     }
 
     def index() {
-        info();
+    }
+
+    def number() {
+        render DynamoParams.myNumber;
     }
 
     def info() {
         log.info("request - server info");
-        count++;
         Map obj = new LinkedHashMap()
-        obj.put("requestCount", Integer.toString(count));
         obj.put("server IP", InetAddress.getLocalHost().getHostAddress());
+        obj.put("server id", DynamoParams.getMyNumber().toString());
         int i=0;
         for(ServiceInstance s:serviceProvider.allInstances) {
             if(!InetAddress.getLocalHost().getHostAddress().equals(s.address)) {
                 i++;
-                obj.put("neighbour "+i, s.address);
-            }
-        }
-        def json = obj as JSON
-        json.prettyPrint = true
-        json.render response
-    }
+                obj.put("neighbour "+i+" IP", s.address);
 
-    def neighbours() {
-        log.info("request - neighbours numbers")
-
-        Map obj = new LinkedHashMap()
-        for(ServiceInstance s:serviceProvider.allInstances) {
-            if(!InetAddress.getLocalHost().getHostAddress().equals(s.address)) {
                 String address = s.buildUriSpec()
                 URL url = (address + "/number").toURL();
                 log.info("sending request to "+url);
                 try {
-                    obj.put(s.address, url.getText());
+                    obj.put("neighbour "+i+" ID", url.getText([connectTimeout: 1000, readTimeout: 1000]));
                 } catch (Exception e) {
-                    obj.put(s.address, "unknown");
+                    obj.put("neighbour "+i+" ID", "unknown");
                     log.error("ERROR",e);
                 }
             }
@@ -74,10 +61,68 @@ class MainController{
         json.render response
     }
 
-    def number() {
-        log.info("request - get number")
-        log.info("rendering number "+ClockNumber.getNumber())
-        render ClockNumber.getNumber().toString();
+    def postData() {
+        String key = params.key;
+        int hash = KeyValue.calculateHash(key);
+        if(belongHash(hash)) {
+            KeyValue kv = KeyValue.findOrCreateByKey(key);
+            kv.setValue(params.value);
+            kv.save(flush: true, failOnError: true);
+            Map obj = new LinkedHashMap();
+            obj.put("status", "success");
+            obj.put("hash", Integer.toString(hash));
+            response.status = 200;
+            render obj as JSON;
+        } else {
+            //redirect
+            /*
+            RestBuilder rest = new RestBuilder();
+            def resp = rest.get("http://${hostname}/oauth/token") {
+                auth(clientId, clientSecret)
+                accept("application/json")
+                contentType("application/x-www-form-urlencoded")
+            }
+            def json = resp.json*/
+            Map obj = new LinkedHashMap()
+            obj.put("status", "redirect");
+            response.status = 200
+            render obj as JSON
+        }
     }
 
+    boolean belongHash(int hash) {
+        return (DynamoParams.myNumber <= hash && DynamoParams.nextNumber > hash);
+    }
+
+    def getData() {
+        String key = params.key;
+        int hash = KeyValue.calculateHash(key);
+        if(belongHash(hash)) {
+            KeyValue kv = KeyValue.findByKey(key);
+            Map obj = new LinkedHashMap();
+
+            if(kv != null) {
+                obj.put("status", "success");
+                obj.put("key", key);
+                obj.put("hash", Integer.toString(hash));
+                obj.put("value", kv.value);
+            } else {
+                obj.put("status", "key not found");
+            }
+            render obj as JSON;
+        } else {
+            //redirect
+            Map obj = new LinkedHashMap()
+            obj.put("status", "redirect");
+            render obj as JSON
+        }
+    }
+
+    def getHash() {
+        if(params.key) {
+            render KeyValue.getHash(params.key);
+        } else {
+            render "";
+        }
+    }
 }
