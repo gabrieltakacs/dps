@@ -1,0 +1,20 @@
+################################################################
+# Web configuration backend
+################################################################
+[web]
+address = ":8081"
+
+################################################################
+# File configuration backend
+################################################################
+
+# Enable file configuration backend
+[file]
+
+# Rules file
+# If defined, traefik will load rules from this file,
+# otherwise, it will load rules from current file (cf Sample rules below).
+filename = "/rules.toml"
+
+# Enable watch file changes
+watch = true

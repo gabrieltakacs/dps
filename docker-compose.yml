@@ -40,10 +40,14 @@ proxy:
   build: ./proxy
   container_name: dps-proxy
   ports:
-    - "80:8080"
+    - "8080:8080"
+    - "8081:8081"
+    - "80:80"
   links:
     - zookeeper
     - logstash
+  volumes:
+    - ./proxy/config:/etc/traefik/
 dynamo:
   build: ./dynamo
   links:
