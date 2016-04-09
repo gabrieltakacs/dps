@@ -175,6 +175,7 @@
 
 <script>
     $.ajax({
+        dataType: "json",
         url: "${createLink(controller:'Main', action: 'info')}", success: function (result) {
             var res = '';
             $.each(result, function (k, v) {
@@ -185,12 +186,11 @@
     });
     function getData() {
         var data = {"key": $("#input-key").val()};
-        console.log(data);
         $.ajax({
+            dataType: "json",
             data: data,
             url: "${createLink(controller:'Main', action: 'getData')}",
             success: function (result) {
-                console.log(result);
                 var res = '';
                 $.each(result, function (k, v) {
                     res += "<li>" + k + ": " + v + "</li>";

@@ -46,7 +46,7 @@ class MainController{
                 obj.put("neighbour "+i+" IP", s.address);
 
                 String address = s.buildUriSpec()
-                URL url = (address + "/number").toURL();
+                URL url = (address + "/api/v1.0/clockNumber").toURL();
                 log.info("sending request to "+url);
                 try {
                     obj.put("neighbour "+i+" ID", url.getText([connectTimeout: 1000, readTimeout: 1000]));
