@@ -121,7 +121,7 @@
         <div class="col-lg-6 col-md-6 col-xs-6 ">
             <div class="panel panel-default">
                 <div class="panel-body form-horizontal">
-                    <g:form method="post" class="form-horizontal" controller="main">
+                    <g:form method="post" class="form-horizontal" url="/api/v1.0/post">
                         <div class="form-group">
                             <div class="col-sm-3 >
                                 <label control-label">Key:

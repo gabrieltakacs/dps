@@ -37,10 +37,13 @@ class ProxyController {
             String address = instance.buildUriSpec()
             String uri = request.getRequestURI().toString();
             URL url = (address + uri).toURL();
+            println("Redirecting to "+url+" "+params)
             log.info("Redirecting to "+url);
             try {
-                String response = url.getText("UTF-8")
-                render response
+                redirect(url: url);
+                return;
+                /*String response = url.getText("UTF-8")
+                render response*/
             } catch (Exception e) {
                 log.error("ERROR while redirecting",e)
                 render "ERROR: "+e.getMessage();

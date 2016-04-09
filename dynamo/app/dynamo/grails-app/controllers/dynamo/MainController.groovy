@@ -11,22 +11,6 @@ import org.apache.curator.x.discovery.ServiceProvider
 
 class MainController{
 
-    static ServiceProvider serviceProvider
-    static {
-        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
-        curatorFramework.start()
-        ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder
-                .builder(Void)
-                .basePath("dynamoProxy")
-                .client(curatorFramework).build()
-        serviceDiscovery.start()
-        serviceProvider = serviceDiscovery
-                .serviceProviderBuilder()
-                .serviceName("servers")
-                .build()
-        serviceProvider.start();
-    }
-
     def index() {
     }
 
@@ -40,7 +24,7 @@ class MainController{
         obj.put("server IP", InetAddress.getLocalHost().getHostAddress());
         obj.put("server id", DynamoParams.getMyNumber().toString());
         int i=0;
-        for(ServiceInstance s:serviceProvider.allInstances) {
+        for(ServiceInstance s:Zookeeper.serviceProvider.allInstances) {
             if(!InetAddress.getLocalHost().getHostAddress().equals(s.address)) {
                 i++;
                 obj.put("neighbour "+i+" IP", s.address);
