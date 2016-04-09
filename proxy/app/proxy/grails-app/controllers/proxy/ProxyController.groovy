@@ -25,6 +25,29 @@ class ProxyController {
                 .serviceName("servers")
                 .build()
         serviceProvider.start()
+
+        try {
+            File file = new File("rules.toml");
+            String s = " [backends]\n" +
+                    "   [backends.backend1]\n";
+            int i = 1;
+            for (ServiceInstance ser : serviceProvider.allInstances) {
+                s += "     [backends.backend1.servers.server" + i + "]\n" +
+                        "     url = \"http://" + ser.address + ":"+ ser.port+"\"\n" +
+                        "     weight = 1\n";
+                i++;
+            }
+            s += " [frontends]\n" +
+                    "   [frontends.frontend1]\n" +
+                    "   backend = \"backend1\"\n" +
+                    "   [frontends.frontend1.routes.proxy]\n" +
+                    "   rule = \"Host\"\n" +
+                    "   value = \"127.0.0.1\"\n";
+            file.createNewFile();
+            file.write(s);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
     def index() {

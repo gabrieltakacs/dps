@@ -3,9 +3,6 @@
      [backends.backend1.servers.server1]
      url = "http://www.google.sk"
      weight = 1
-     [backends.backend1.servers.server2]
-     url = "http://www.azet.sk"
-     weight = 1
  [frontends]
    [frontends.frontend1]
    backend = "backend1"

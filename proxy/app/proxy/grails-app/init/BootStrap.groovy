@@ -43,7 +43,7 @@ class BootStrap {
                     int i = 1;
                     for (ServiceInstance ser : serviceCache.getInstances()) {
                         s += "     [backends.backend1.servers.server" + i + "]\n" +
-                                "     url = \"http://" + ser.address + "\"\n" +
+                                "     url = \"http://" + ser.address + ":"+ ser.port+"\"\n" +
                                 "     weight = 1\n";
                         i++;
                     }
