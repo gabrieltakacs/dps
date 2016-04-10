@@ -4,14 +4,6 @@
 * Mame nakodene "dynamo", ktore dokaze prijimat requesty, ale nic s nimi zatial nerobi
 * Mame rozbehane elstash
 
-# Aktualne problemy
-
-# Todo:
-* Otestovat logovanie
-* Spravit, aby dynamo vedelo preposielat requesty na ine dynama
-* Zistit, ci to musi bezat na dvoch separatnych PCs, alebo ci sa ako virtualka mysli docker container
-* Vsetko skontrolovat a pripravit na odovzdavanie
-
 # Docker
 
 ## Docker intercontainer networking
