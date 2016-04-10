@@ -6,6 +6,8 @@ RUN cp /dynamo/build/libs/*.war /opt/tomcat/webapps/
 RUN rm -r dynamo
 RUN export CATALINA_OPTS="-server -Dfile.encoding=UTF-8"
 
+EXPOSE 2181
+
 # Install utils
 RUN apk update && apk upgrade && apk add curl bash wget vim
 
@@ -20,10 +22,15 @@ RUN apk add --update python curl && \
             apk add --allow-untrusted glibc-2.21-r2.apk glibc-bin-2.21-r2.apk && \
             /usr/glibc/usr/bin/ldconfig /lib /usr/glibc/usr/lib
 RUN cd /opt/ && curl -sL ${FILEBEAT_URL} | tar xz -C .
-
 ADD ./config/filebeat.yml ${FILEBEAT_HOME}
 
-EXPOSE 2181
+# Install Zabbix-agent
+RUN addgroup -g 2000 -S zabbix \
+    && adduser -u 2000 -G zabbix -S zabbix \
+    && apk add --update zabbix-agent jq bash python socat curl wget openssl \
+    && rm -rf /var/cache/apk/* \
+    && mkdir /etc/zabbix/zabbix_agentd.conf.d
+ADD ./config/zabbix.conf /etc/zabbix/zabbix_agentd.conf
 
 ADD run.sh /run.sh
 RUN chmod 777 /run.sh
