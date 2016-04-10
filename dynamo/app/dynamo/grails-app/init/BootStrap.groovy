@@ -2,6 +2,7 @@ import dynamo.DynamoParams
 import dynamo.Zookeeper
 import org.apache.curator.framework.CuratorFramework
 import org.apache.curator.framework.CuratorFrameworkFactory
+import org.apache.curator.framework.recipes.locks.InterProcessMutex
 import org.apache.curator.retry.RetryNTimes
 import org.apache.curator.x.discovery.ServiceDiscovery
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder
@@ -12,35 +13,39 @@ import org.apache.curator.x.discovery.UriSpec
 class BootStrap {
 
     def init = { servletContext ->
-
-        registerInZookeeper();
+        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
+        curatorFramework.start()
+        InterProcessMutex mutex = new InterProcessMutex(curatorFramework, "/lock");
+        mutex.acquire()
+        setServiceProvider(curatorFramework);
         initDynamo();
+        registerInZookeeper(curatorFramework);
+        mutex.release();
     }
 
     def destroy = {
     }
 
-    private static void registerInZookeeper() {
-        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
-        curatorFramework.start()
-        ServiceInstance<Void> serviceInstance = ServiceInstance.builder()
+    private static void registerInZookeeper(CuratorFramework curatorFramework) {
+
+        ServiceInstance<String> serviceInstance = ServiceInstance.builder()
                 .uriSpec(new UriSpec("{scheme}://{address}:{port}"))
                 .address(InetAddress.getLocalHost().getHostAddress())
                 .port(8080)
+                .payload(Integer.toString(DynamoParams.myNumber))
                 .name("servers")
                 .build()
-        ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder.builder(Void)
+        ServiceDiscoveryBuilder.builder(String)
                 .basePath("dynamoProxy")
                 .client(curatorFramework)
                 .thisInstance(serviceInstance)
                 .build()
                 .start()
-        setServiceProvider(curatorFramework);
     }
 
     private static void setServiceProvider(CuratorFramework curatorFramework) {
-        ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder
-                .builder(Void)
+        ServiceDiscovery<String> serviceDiscovery = ServiceDiscoveryBuilder
+                .builder(String)
                 .basePath("dynamoProxy")
                 .client(curatorFramework).build()
         serviceDiscovery.start()
@@ -67,6 +72,7 @@ class BootStrap {
             }
         }
         int myNumber;
+        String l = list.toString();
         if(list.isEmpty()) {
             myNumber = 0;
             println("first node - 0");
@@ -76,7 +82,6 @@ class BootStrap {
         } else {
             int most = 0;
             list.sort();
-            println(list.toString());
             for(int i=0;i<list.size();i++) {
                 int next;
                 if(i<list.size()-1) next = list.get(i+1) else next = DynamoParams.maxClockNumber;
@@ -86,7 +91,12 @@ class BootStrap {
                 }
             }
         }
-
+        //TODO remove later
+        l +="    "+Integer.toString(myNumber);
+        File file = new File("myLog.txt");
+        file.createNewFile();
+        file.write(l);
+        //
         DynamoParams.setMyNumber(myNumber);
         DynamoParams.setNextNumber(DynamoParams.maxClockNumber);
     }

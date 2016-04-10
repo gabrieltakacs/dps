@@ -1,13 +1,7 @@
 package dynamo
 
 import grails.converters.JSON
-import org.apache.curator.framework.CuratorFramework
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.RetryNTimes
-import org.apache.curator.x.discovery.ServiceDiscovery
-import org.apache.curator.x.discovery.ServiceDiscoveryBuilder
 import org.apache.curator.x.discovery.ServiceInstance
-import org.apache.curator.x.discovery.ServiceProvider
 
 class MainController{
 
@@ -18,28 +12,33 @@ class MainController{
         render DynamoParams.myNumber;
     }
 
-    def info() {
-        log.info("request - server info");
+    private getInfo = { ->
         Map obj = new LinkedHashMap()
         obj.put("server IP", InetAddress.getLocalHost().getHostAddress());
         obj.put("server id", DynamoParams.getMyNumber().toString());
-        int i=0;
-        for(ServiceInstance s:Zookeeper.serviceProvider.allInstances) {
-            if(!InetAddress.getLocalHost().getHostAddress().equals(s.address)) {
+        int i = 0;
+        for (ServiceInstance s : Zookeeper.serviceProvider.allInstances) {
+            if (!InetAddress.getLocalHost().getHostAddress().equals(s.address)) {
                 i++;
-                obj.put("neighbour "+i+" IP", s.address);
+                obj.put("neighbour " + i + " IP", s.address);
 
                 String address = s.buildUriSpec()
                 URL url = (address + "/api/v1.0/clockNumber").toURL();
-                log.info("sending request to "+url);
+                log.info("sending request to " + url);
                 try {
-                    obj.put("neighbour "+i+" ID", url.getText([connectTimeout: 1000, readTimeout: 1000]));
+                    obj.put("neighbour " + i + " ID", url.getText([connectTimeout: 1000, readTimeout: 1000]));
                 } catch (Exception e) {
-                    obj.put("neighbour "+i+" ID", "unknown");
-                    log.error("ERROR",e);
+                    obj.put("neighbour " + i + " ID", "unknown");
+                    log.error("ERROR", e);
                 }
             }
         }
+        return obj;
+    }
+
+    def info() {
+        log.info("request - server info");
+        Map obj = getInfo();
         def json = obj as JSON
         json.prettyPrint = true
         json.render response
@@ -74,10 +73,6 @@ class MainController{
         }
     }
 
-    boolean belongHash(int hash) {
-        return (DynamoParams.myNumber <= hash && DynamoParams.nextNumber > hash);
-    }
-
     def getData() {
         String key = params.key;
         int hash = KeyValue.calculateHash(key);
@@ -108,5 +103,9 @@ class MainController{
         } else {
             render "";
         }
+    }
+
+    boolean belongHash(int hash) {
+        return (DynamoParams.myNumber <= hash && DynamoParams.nextNumber > hash);
     }
 }
