@@ -21,16 +21,7 @@ class MainController{
             if (!InetAddress.getLocalHost().getHostAddress().equals(s.address)) {
                 i++;
                 obj.put("neighbour " + i + " IP", s.address);
-
-                String address = s.buildUriSpec()
-                URL url = (address + "/api/v1.0/clockNumber").toURL();
-                log.info("sending request to " + url);
-                try {
-                    obj.put("neighbour " + i + " ID", url.getText([connectTimeout: 1000, readTimeout: 1000]));
-                } catch (Exception e) {
-                    obj.put("neighbour " + i + " ID", "unknown");
-                    log.error("ERROR", e);
-                }
+                obj.put("neighbour " + i + " ID", s.payload);
             }
         }
         return obj;

@@ -62,13 +62,7 @@ class BootStrap {
         for(ServiceInstance s:Zookeeper.serviceProvider.allInstances) {
             if (!InetAddress.getLocalHost().getHostAddress().equals(s.address)) {
                 println("init dynamo start");
-                String address = s.buildUriSpec()
-                URL url = (address + "/api/v1.0/clockNumber").toURL();
-                try {
-                    list.add(Integer.parseInt(url.getText([connectTimeout: 1000, readTimeout: 1000])));
-                } catch (Exception e) {
-                    println("init dynamo error: "+e.getMessage());
-                }
+                list.add(Integer.parseInt(s.payload as String));
             }
         }
         int myNumber;

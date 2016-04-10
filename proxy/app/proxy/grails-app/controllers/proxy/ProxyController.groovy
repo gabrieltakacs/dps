@@ -34,6 +34,7 @@ class ProxyController {
         for (ServiceInstance s : serviceProvider.allInstances) {
             i++;
             obj.put("node " + i + " IP", s.address);
+            obj.put("node " + i + " ID", s.payload);
         }
         def json = obj as JSON
         json.prettyPrint = true
