@@ -9,18 +9,19 @@ class UrlMappings {
             }
         }
         "/api/v1.0/post/" {
-            controller = 'Main'
+            controller = 'Dynamo'
             action = [POST: "postData"]
         }
         "/api/v1.0/get/" {
-            controller = 'Main'
+            controller = 'Dynamo'
             action = [GET: "getData"]
         }
         "/api/v1.0/clockNumber/" {
             controller = 'Main'
             action = [GET: "number"]
         }
-        "/"(view:"/index")
+        "/"(controller:"Main", action:"index")
+       // "/"(view:"/index")
         "500"(view:'/error')
         "404"(view:'/notFound')
     }

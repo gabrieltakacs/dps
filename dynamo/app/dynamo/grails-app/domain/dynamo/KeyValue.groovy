@@ -14,6 +14,8 @@ class KeyValue {
     }
 
     static int calculateHash(String key) {
+        if(key == null)
+            return 0;
         return key.hashCode()%DynamoParams.maxClockNumber;
     }
 }
