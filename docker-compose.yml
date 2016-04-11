@@ -53,8 +53,8 @@ dynamo:
   build: ./dynamo
   links:
     - zookeeper
-    - logstash
-    - zabbix
+#    - logstash
+#    - zabbix
 zabbix:
   image: berngp/docker-zabbix
   container_name: dps-zabbix

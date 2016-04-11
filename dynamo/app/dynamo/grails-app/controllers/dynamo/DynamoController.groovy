@@ -14,7 +14,7 @@ class DynamoController {
         render DynamoParams.myNumber;
     }
 
-    static def rest(String baseUrl, String path, query, method = Method.GET) {
+    static def rest(String baseUrl, String path, query, Method method = Method.GET) {
         try {
             def ret = null
             def http = new HTTPBuilder(baseUrl)
@@ -40,63 +40,124 @@ class DynamoController {
 
     def postData() {
         String key = params.key;
-        def url = "http://127.0.0.1:8080"
-        def path = "/api/v1.0/get"
-        def query = [ key: params.key ]
-        JSONElement a = JSON.parse(rest(url, path, query));
-
         int hash = KeyValue.calculateHash(key);
-        if(belongHash(hash)) {
+
+        //spracuje a neposiela ďalej
+        if(params.redirected == true) {
+            Map obj = new LinkedHashMap();
+            log.debug("postData - received redirected response: "+params);
+            //TODO check či má naozaj zapísať - podla hashu či je jeden z príjemcov
             KeyValue kv = KeyValue.findOrCreateByKey(key);
             kv.setValue(params.value);
             kv.save(flush: true, failOnError: true);
-            Map obj = new LinkedHashMap();
+
             obj.put("status", "success");
-            obj.put("hash", Integer.toString(hash));
-            response.status = 200;
-            render obj as JSON;
-            log.debug("postData - accepting request: "+params);
-        } else {
-            Map obj = new LinkedHashMap()
-            obj.put("status", "redirect");
+
             response.status = 200
-            log.debug("postData - redirecting request: "+params);
             render obj as JSON
+        } else {
+            //pošle požiadavku serverom, pre ktoré je určená (zistí podla hashu klúča
+
+            List<ServiceInstance> instances = getServers(hash);
+            println(instances);
+            int success = 0;
+            for(ServiceInstance i:instances) {
+                //som jeden z príjemcov
+                if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
+                    log.debug("postData - storing data: "+params);
+                    KeyValue kv = KeyValue.findOrCreateByKey(key);
+                    kv.setValue(params.value);
+                    kv.save(flush: true, failOnError: true);
+                } else { //prepošle ďalej
+                    //TODO paralelne + synchronizovať
+                    String url = "http://"+i.address+":"+i.port;
+                    log.debug("postData - resending to: "+url);
+                    String path = "/api/v1.0/post"
+                    Map query = new LinkedHashMap(params);
+                    query.put("redirected", true);
+                    JSONElement a = JSON.parse(rest(url, path, query, Method.POST));
+                    log.debug("postData - received response:");
+                    if(a?.status == "success") {
+                        success++;
+                    }
+                }
+                Map obj = new LinkedHashMap();
+                obj.put("status", "success: "+success);
+                obj.put("hash", Integer.toString(hash));
+
+                response.status = 200
+                render obj as JSON
+            }
         }
     }
 
     def getData() {
         String key = params.key;
         int hash = KeyValue.calculateHash(key);
-        println(getServers(hash));
-        if(belongHash(hash)) {
-            KeyValue kv = KeyValue.findByKey(key);
-            Map obj = new LinkedHashMap();
 
-            if(kv != null) {
+        //spracuje a neposiela ďalej
+        if(params.redirected == true) {
+            Map obj = new LinkedHashMap();
+            log.debug("getData - received redirected response: "+params);
+
+            KeyValue kv = KeyValue.findByKey(key);
+            if(kv?.value != null) {
                 obj.put("status", "success");
-                obj.put("key", key);
-                obj.put("hash", Integer.toString(hash));
                 obj.put("value", kv.value);
             } else {
-                obj.put("status", "key not found");
+                obj.put("status", "no data");
             }
-            render obj as JSON;
-        } else {
-            //redirect
-            Map obj = new LinkedHashMap()
-            obj.put("status", "redirect");
+
+            response.status = 200
             render obj as JSON
+        } else {
+            //pošle požiadavku serverom, pre ktoré je určená (zistí podla hashu klúča
+
+            List<ServiceInstance> instances = getServers(hash);
+            println(instances);
+            Set<String> set = new HashSet<>();
+            for(ServiceInstance i:instances) {
+                //som jeden z príjemcov
+                if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
+                    log.debug("getData - getting data: "+params);
+                    KeyValue kv = KeyValue.findByKey(key);
+                    if(kv?.value != null) {
+                        set.add(kv.value);
+                    }
+                } else { //prepošle ďalej
+                    //TODO paralelne + synchronizovať
+                    String url = "http://"+i.address+":"+i.port;
+                    log.debug("postData - resending to: "+url);
+                    String path = "/api/v1.0/get"
+                    Map query = new LinkedHashMap(params);
+                    query.put("redirected", true);
+                    JSONElement a = JSON.parse(rest(url, path, query));
+                    log.debug("getData - received response:");
+                    if(a?.status == "success") {
+                        set.add(a.value);
+                    }
+                }
+                Map obj = new LinkedHashMap();
+                obj.put("status", "success");
+                obj.put("values", set);
+
+                response.status = 200
+                render obj as JSON
+            }
         }
     }
 
-    boolean belongHash(int hash) {
-        return (DynamoParams.myNumber <= hash && DynamoParams.nextNumber > hash);
+    static Comparator<ServiceInstance> comparator = new Comparator<ServiceInstance>() {
+        @Override
+        int compare(ServiceInstance o1, ServiceInstance o2) {
+            return Integer.compare(Integer.parseInt(o1.payload as String), Integer.parseInt(o2.payload as String))
+        }
     }
 
     List<ServiceInstance> getServers(int hash) {
         List<ServiceInstance> instances = new ArrayList<>();
-        List<ServiceInstance> all = Zookeeper.serviceProvider.allInstances;
+        List<ServiceInstance> all = new ArrayList<ServiceInstance>(Zookeeper.serviceProvider.allInstances);
+        all.sort(comparator);
         for (int i=0; i<all.size(); i++) {
             ServiceInstance instance = all.get(i);
             int instanceKey = Integer.parseInt(instance.payload as String);

@@ -85,13 +85,6 @@ class BootStrap {
                 }
             }
         }
-        //TODO remove later
-        l +="    "+Integer.toString(myNumber);
-        File file = new File("myLog.txt");
-        file.createNewFile();
-        file.write(l);
-        //
         DynamoParams.setMyNumber(myNumber);
-        DynamoParams.setNextNumber(DynamoParams.maxClockNumber);
     }
 }
