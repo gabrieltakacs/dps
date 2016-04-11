@@ -46,9 +46,21 @@ proxy:
   links:
     - zookeeper
     - logstash
+    - zabbix
   volumes:
     - ./proxy/config:/etc/traefik/
 dynamo:
   build: ./dynamo
   links:
     - zookeeper
+    - logstash
+    - zabbix
+zabbix:
+  image: berngp/docker-zabbix
+  container_name: dps-zabbix
+  hostname: zabbix
+  ports:
+      - "10051:10051"
+      - "10052:10052"
+      - "8089:80"
+      - "2812:2812"
