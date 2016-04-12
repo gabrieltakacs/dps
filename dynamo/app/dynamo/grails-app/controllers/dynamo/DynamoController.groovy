@@ -43,7 +43,7 @@ class DynamoController {
         int hash = KeyValue.calculateHash(key);
 
         //spracuje a neposiela ďalej
-        if(params.redirected == true) {
+        if(params.redirected == "true") {
             Map obj = new LinkedHashMap();
             log.debug("postData - received redirected response: "+params);
             //TODO check či má naozaj zapísať - podla hashu či je jeden z príjemcov
@@ -52,14 +52,11 @@ class DynamoController {
             kv.save(flush: true, failOnError: true);
 
             obj.put("status", "success");
-
             response.status = 200
             render obj as JSON
         } else {
             //pošle požiadavku serverom, pre ktoré je určená (zistí podla hashu klúča
-
             List<ServiceInstance> instances = getServers(hash);
-            println(instances);
             int success = 0;
             for(ServiceInstance i:instances) {
                 //som jeden z príjemcov
@@ -68,12 +65,15 @@ class DynamoController {
                     KeyValue kv = KeyValue.findOrCreateByKey(key);
                     kv.setValue(params.value);
                     kv.save(flush: true, failOnError: true);
+                    success++;
                 } else { //prepošle ďalej
                     //TODO paralelne + synchronizovať
                     String url = "http://"+i.address+":"+i.port;
                     log.debug("postData - resending to: "+url);
                     String path = "/api/v1.0/post"
-                    Map query = new LinkedHashMap(params);
+                    Map query = new LinkedHashMap();
+                    query.put("key", params.key);
+                    query.put("value", params.value);
                     query.put("redirected", true);
                     JSONElement a = JSON.parse(rest(url, path, query, Method.POST));
                     log.debug("postData - received response:");
@@ -96,10 +96,9 @@ class DynamoController {
         int hash = KeyValue.calculateHash(key);
 
         //spracuje a neposiela ďalej
-        if(params.redirected == true) {
+        if(params.redirected == "true") {
             Map obj = new LinkedHashMap();
             log.debug("getData - received redirected response: "+params);
-
             KeyValue kv = KeyValue.findByKey(key);
             if(kv?.value != null) {
                 obj.put("status", "success");
@@ -107,15 +106,13 @@ class DynamoController {
             } else {
                 obj.put("status", "no data");
             }
-
             response.status = 200
             render obj as JSON
         } else {
             //pošle požiadavku serverom, pre ktoré je určená (zistí podla hashu klúča
-
             List<ServiceInstance> instances = getServers(hash);
-            println(instances);
-            Set<String> set = new HashSet<>();
+            Set<String> set = new HashSet<>();//values, môžu sa lýšiť
+            int success = 0;
             for(ServiceInstance i:instances) {
                 //som jeden z príjemcov
                 if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
@@ -123,23 +120,27 @@ class DynamoController {
                     KeyValue kv = KeyValue.findByKey(key);
                     if(kv?.value != null) {
                         set.add(kv.value);
+                        success++;
                     }
                 } else { //prepošle ďalej
                     //TODO paralelne + synchronizovať
                     String url = "http://"+i.address+":"+i.port;
                     log.debug("postData - resending to: "+url);
                     String path = "/api/v1.0/get"
-                    Map query = new LinkedHashMap(params);
+                    Map query = new HashMap();
+                    query.put("key", params.key);
                     query.put("redirected", true);
                     JSONElement a = JSON.parse(rest(url, path, query));
                     log.debug("getData - received response:");
-                    if(a?.status == "success") {
+                    if(a?.status == "success" && a?.value != null) {
                         set.add(a.value);
+                        success++;
                     }
                 }
-                println("set: "+set)
                 Map obj = new LinkedHashMap();
-                obj.put("status", "success");
+                obj.put("key", params.key);
+                obj.put("hash", hash);
+                obj.put("status", "success: "+success);
                 obj.put("values", set);
 
                 response.status = 200

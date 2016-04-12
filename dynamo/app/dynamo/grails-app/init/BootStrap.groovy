@@ -70,7 +70,7 @@ class BootStrap {
             myNumber = 0;
             println("first node - 0");
         } else {
-            int most = 0;
+            int most = -1;
             list.sort();
             for(int i=0;i<list.size();i++) {
                 int actual = list.get(i);
