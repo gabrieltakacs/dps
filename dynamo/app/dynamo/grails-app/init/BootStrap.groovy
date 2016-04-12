@@ -81,7 +81,7 @@ class BootStrap {
                     if(distance == 0) {
                         distance += DynamoParams.maxClockNumber;
                     }
-                    myNumber = actual+(distance/2);
+                    myNumber = (actual+(distance/2))%DynamoParams.maxClockNumber;
                 }
             }
         }

@@ -25,7 +25,7 @@ class DynamoController {
                 response.success = { resp, reader ->
                     ret = reader.getText()
                     //TODO remove later
-                    println 'Response data: -----';println ret;println '--------------------'
+                    //println 'Response data: -----';println ret;println '--------------------'
                 }
             }
             return ret
@@ -76,18 +76,18 @@ class DynamoController {
                     query.put("value", params.value);
                     query.put("redirected", true);
                     JSONElement a = JSON.parse(rest(url, path, query, Method.POST));
-                    log.debug("postData - received response:");
+                    log.debug("postData - received response: "+a);
                     if(a?.status == "success") {
                         success++;
                     }
                 }
-                Map obj = new LinkedHashMap();
-                obj.put("status", "success: "+success);
-                obj.put("hash", Integer.toString(hash));
-
-                response.status = 200
-                render obj as JSON
             }
+            Map obj = new LinkedHashMap();
+            obj.put("status", "success: "+success);
+            obj.put("hash", Integer.toString(hash));
+
+            response.status = 200
+            render obj as JSON
         }
     }
 
@@ -137,15 +137,15 @@ class DynamoController {
                         success++;
                     }
                 }
-                Map obj = new LinkedHashMap();
-                obj.put("key", params.key);
-                obj.put("hash", hash);
-                obj.put("status", "success: "+success);
-                obj.put("values", set);
-
-                response.status = 200
-                render obj as JSON
             }
+            Map obj = new LinkedHashMap();
+            obj.put("key", params.key);
+            obj.put("hash", hash);
+            obj.put("status", "success: "+success);
+            obj.put("values", set);
+
+            response.status = 200
+            render obj as JSON
         }
     }
 
