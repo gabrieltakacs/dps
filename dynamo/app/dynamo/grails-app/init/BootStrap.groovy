@@ -66,22 +66,22 @@ class BootStrap {
             }
         }
         int myNumber;
-        String l = list.toString();
         if(list.isEmpty()) {
             myNumber = 0;
             println("first node - 0");
-        } else if(list.size() == 1) {
-            myNumber = DynamoParams.maxClockNumber/2;
-            println("second node - "+myNumber);
         } else {
             int most = 0;
             list.sort();
             for(int i=0;i<list.size();i++) {
-                int next;
-                if(i<list.size()-1) next = list.get(i+1) else next = DynamoParams.maxClockNumber;
-                if(most < (next - list.get(i))) {
-                    most = (next - list.get(i));
-                    myNumber = (next+list.get(i))/2;
+                int actual = list.get(i);
+                int next = list.get((i+1)%list.size());
+                int distance = (DynamoParams.maxClockNumber - actual + next) % DynamoParams.maxClockNumber;
+                if(most < distance) {
+                    most = distance;
+                    if(distance == 0) {
+                        distance += DynamoParams.maxClockNumber;
+                    }
+                    myNumber = actual+(distance/2);
                 }
             }
         }

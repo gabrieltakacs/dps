@@ -137,6 +137,7 @@ class DynamoController {
                         set.add(a.value);
                     }
                 }
+                println("set: "+set)
                 Map obj = new LinkedHashMap();
                 obj.put("status", "success");
                 obj.put("values", set);
