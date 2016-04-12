@@ -112,16 +112,22 @@ class DynamoController {
             //pošle požiadavku serverom, pre ktoré je určená (zistí podla hashu klúča
             List<ServiceInstance> instances = getServers(hash);
             Set<String> set = new HashSet<>();//values, môžu sa lýšiť
+            List<String> debugList = new ArrayList<>();
             int success = 0;
             for(ServiceInstance i:instances) {
                 //som jeden z príjemcov
                 if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
                     log.debug("getData - getting data: "+params);
                     KeyValue kv = KeyValue.findByKey(key);
+                    String s = "["+i.payload+"]"+" "+i.address+" (this)";
                     if(kv?.value != null) {
                         set.add(kv.value);
                         success++;
+                        s+=" "+kv.value;
+                    } else {
+                        s+=" no data";
                     }
+                    debugList.add(s);
                 } else { //prepošle ďalej
                     //TODO paralelne + synchronizovať
                     String url = "http://"+i.address+":"+i.port;
@@ -132,10 +138,15 @@ class DynamoController {
                     query.put("redirected", true);
                     JSONElement a = JSON.parse(rest(url, path, query));
                     log.debug("getData - received response:");
+                    String s = "["+i.payload+"]"+" "+i.address;
                     if(a?.status == "success" && a?.value != null) {
                         set.add(a.value);
                         success++;
+                        s+=" "+a.value;
+                    } else {
+                        s+=" no data";
                     }
+                    debugList.add(s);
                 }
             }
             Map obj = new LinkedHashMap();
@@ -143,7 +154,7 @@ class DynamoController {
             obj.put("hash", hash);
             obj.put("status", "success: "+success);
             obj.put("values", set);
-
+            obj.put("debug-values", debugList);
             response.status = 200
             render obj as JSON
         }

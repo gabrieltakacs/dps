@@ -16,11 +16,14 @@ class BootStrap {
         CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
         curatorFramework.start()
         InterProcessMutex mutex = new InterProcessMutex(curatorFramework, "/lock");
+        println("accquiring lock")
         mutex.acquire()
+        println("lock acquired")
         setServiceProvider(curatorFramework);
         initDynamo();
         registerInZookeeper(curatorFramework);
         mutex.release();
+        println("lock released")
     }
 
     def destroy = {
@@ -58,14 +61,15 @@ class BootStrap {
     }
 
     private static void initDynamo() {
+        println("init dynamo start");
         ArrayList<Integer> list = new ArrayList<Integer>();
         for(ServiceInstance s:Zookeeper.serviceProvider.allInstances) {
             if (!InetAddress.getLocalHost().getHostAddress().equals(s.address)) {
-                println("init dynamo start");
                 list.add(Integer.parseInt(s.payload as String));
             }
         }
-        int myNumber;
+        println(list)
+        int myNumber = 0;
         if(list.isEmpty()) {
             myNumber = 0;
             println("first node - 0");
@@ -81,10 +85,11 @@ class BootStrap {
                     if(distance == 0) {
                         distance += DynamoParams.maxClockNumber;
                     }
-                    myNumber = (actual+(distance/2))%DynamoParams.maxClockNumber;
+                    myNumber = ((actual + (distance / 2)) as Integer) % DynamoParams.maxClockNumber;
                 }
             }
         }
+        println("selected number "+myNumber)
         DynamoParams.setMyNumber(myNumber);
     }
 }
