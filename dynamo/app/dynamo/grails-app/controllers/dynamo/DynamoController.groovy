@@ -56,7 +56,7 @@ class DynamoController {
             render obj as JSON
         } else {
             //pošle požiadavku serverom, pre ktoré je určená (zistí podla hashu klúča
-            List<ServiceInstance> instances = getServers(hash);
+            List<ServiceInstance> instances = Zookeeper.getResponsibleServers(hash);
             int success = 0;
             for(ServiceInstance i:instances) {
                 //som jeden z príjemcov
@@ -110,7 +110,7 @@ class DynamoController {
             render obj as JSON
         } else {
             //pošle požiadavku serverom, pre ktoré je určená (zistí podla hashu klúča
-            List<ServiceInstance> instances = getServers(hash);
+            List<ServiceInstance> instances = Zookeeper.getResponsibleServers(hash);
             Set<String> set = new HashSet<>();//values, môžu sa lýšiť
             List<String> debugList = new ArrayList<>();
             int success = 0;
@@ -160,34 +160,4 @@ class DynamoController {
         }
     }
 
-    static Comparator<ServiceInstance> comparator = new Comparator<ServiceInstance>() {
-        @Override
-        int compare(ServiceInstance o1, ServiceInstance o2) {
-            return Integer.compare(Integer.parseInt(o1.payload as String), Integer.parseInt(o2.payload as String))
-        }
-    }
-
-    List<ServiceInstance> getServers(int hash) {
-        List<ServiceInstance> instances = new ArrayList<>();
-        List<ServiceInstance> all = new ArrayList<ServiceInstance>(Zookeeper.serviceProvider.allInstances);
-        all.sort(comparator);
-        for (int i=0; i<all.size(); i++) {
-            ServiceInstance instance = all.get(i);
-            int instanceKey = Integer.parseInt(instance.payload as String);
-            if(instanceKey >= hash) {
-                instances.add(instance);
-                if(instances.size() >= DynamoParams.replicas) {
-                    break;
-                }
-            }
-        }
-        if(instances.size() < DynamoParams.replicas && all.size() > instances.size()) {
-            int i=0;
-            while(instances.size() < Math.min(DynamoParams.replicas, all.size())) {
-                instances.add(all.get(i));
-                i++;
-            }
-        }
-        return instances;
-    }
 }
