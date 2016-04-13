@@ -1,13 +1,5 @@
 FROM davidcaste/alpine-tomcat:tomcat8
 
-COPY app/dynamo /dynamo/
-#RUN cd /dynamo && ./gradlew war
-RUN cp /dynamo/build/libs/*.war /opt/tomcat/webapps/
-RUN rm -r dynamo
-RUN export CATALINA_OPTS="-server -Dfile.encoding=UTF-8"
-
-EXPOSE 2181
-
 # Install utils
 RUN apk update && apk upgrade && apk add curl bash wget vim
 
@@ -31,6 +23,14 @@ RUN addgroup -g 2000 -S zabbix \
     && rm -rf /var/cache/apk/* \
     && mkdir /etc/zabbix/zabbix_agentd.conf.d
 ADD ./config/zabbix.conf /etc/zabbix/zabbix_agentd.conf
+
+COPY app/dynamo /dynamo/
+#RUN cd /dynamo && ./gradlew war
+RUN cp /dynamo/build/libs/*.war /opt/tomcat/webapps/
+RUN rm -r dynamo
+RUN export CATALINA_OPTS="-server -Dfile.encoding=UTF-8"
+
+EXPOSE 2181
 
 ADD run.sh /run.sh
 RUN chmod 777 /run.sh

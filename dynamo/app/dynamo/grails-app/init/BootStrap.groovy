@@ -1,9 +1,11 @@
 import dynamo.DynamoParams
+import dynamo.MyServiceCacheListener
 import dynamo.Zookeeper
 import org.apache.curator.framework.CuratorFramework
 import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.framework.recipes.locks.InterProcessMutex
 import org.apache.curator.retry.RetryNTimes
+import org.apache.curator.x.discovery.ServiceCache
 import org.apache.curator.x.discovery.ServiceDiscovery
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder
 import org.apache.curator.x.discovery.ServiceInstance
@@ -24,6 +26,7 @@ class BootStrap {
         registerInZookeeper(curatorFramework);
         mutex.release();
         println("lock released")
+        Zookeeper.getServiceCache().addListener(MyServiceCacheListener.getInstance());
     }
 
     def destroy = {
@@ -58,6 +61,9 @@ class BootStrap {
                 .build()
         serviceProvider.start();
         Zookeeper.setServiceProvider(serviceProvider);
+        ServiceCache serviceCache = serviceDiscovery.serviceCacheBuilder().name("servers").build();
+        serviceCache.start();
+        Zookeeper.setServiceCache(serviceCache);
     }
 
     private static void initDynamo() {

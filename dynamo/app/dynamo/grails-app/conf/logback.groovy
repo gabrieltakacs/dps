@@ -25,7 +25,7 @@ appender("FILE", FileAppender) {
     }
 }
 
-root(DEBUG, ['FILE', 'STDERR'])
+root(DEBUG, ['FILE'/*, 'STDERR'*/])
 
 def targetDir = BuildSettings.TARGET_DIR
 if (Environment.isDevelopmentMode() && targetDir) {

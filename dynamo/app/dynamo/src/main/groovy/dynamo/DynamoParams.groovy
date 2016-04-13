@@ -8,6 +8,7 @@ class DynamoParams {
 
     private static Integer myNumber = null;
 
+
     private DynamoParams() {
         throw new AssertionError();
     }
