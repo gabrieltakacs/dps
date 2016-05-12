@@ -1,69 +1,47 @@
 import dynamo.DynamoParams
-import dynamo.MyServiceCacheListener
+import dynamo.Replicator
 import dynamo.Zookeeper
 import org.apache.curator.framework.CuratorFramework
-import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.framework.recipes.locks.InterProcessMutex
-import org.apache.curator.retry.RetryNTimes
-import org.apache.curator.x.discovery.ServiceCache
-import org.apache.curator.x.discovery.ServiceDiscovery
-import org.apache.curator.x.discovery.ServiceDiscoveryBuilder
+import org.apache.curator.framework.state.ConnectionState
 import org.apache.curator.x.discovery.ServiceInstance
-import org.apache.curator.x.discovery.ServiceProvider
-import org.apache.curator.x.discovery.UriSpec
+import org.apache.curator.x.discovery.details.ServiceCacheListener
 
 class BootStrap {
 
     def init = { servletContext ->
-        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
-        curatorFramework.start()
+
+        CuratorFramework curatorFramework = Zookeeper.initCuratorFramework();
         InterProcessMutex mutex = new InterProcessMutex(curatorFramework, "/lock");
-        println("accquiring lock")
+        println("Bootstrap - accquiring lock")
         mutex.acquire()
-        println("lock acquired")
-        setServiceProvider(curatorFramework);
+        println("Bootstrap - lock acquired")
+        Zookeeper.initServiceProvider();
         initDynamo();
-        registerInZookeeper(curatorFramework);
+        Zookeeper.registerServer();
         mutex.release();
-        println("lock released")
-        Zookeeper.getServiceCache().addListener(MyServiceCacheListener.getInstance());
+        println("Bootstrap - lock released")
+        Zookeeper.getServiceCache().addListener(new ServiceCacheListener() {
+            @Override
+            void cacheChanged() {
+                println("ServiceCacheListener - cacheChanged event");
+                Replicator.getInstance().process();
+            }
+
+            @Override
+            void stateChanged(CuratorFramework client, ConnectionState newState) {
+                println("ServiceCacheListener - stateChanged event");
+                println(client+" - "+newState);
+            }
+        });
+        new Thread() {
+            public void run() {
+                Replicator.getInstance().process();
+            }
+        }.start();
     }
 
     def destroy = {
-    }
-
-    private static void registerInZookeeper(CuratorFramework curatorFramework) {
-
-        ServiceInstance<String> serviceInstance = ServiceInstance.builder()
-                .uriSpec(new UriSpec("{scheme}://{address}:{port}"))
-                .address(InetAddress.getLocalHost().getHostAddress())
-                .port(8080)
-                .payload(Integer.toString(DynamoParams.myNumber))
-                .name("servers")
-                .build()
-        ServiceDiscoveryBuilder.builder(String)
-                .basePath("dynamoProxy")
-                .client(curatorFramework)
-                .thisInstance(serviceInstance)
-                .build()
-                .start()
-    }
-
-    private static void setServiceProvider(CuratorFramework curatorFramework) {
-        ServiceDiscovery<String> serviceDiscovery = ServiceDiscoveryBuilder
-                .builder(String)
-                .basePath("dynamoProxy")
-                .client(curatorFramework).build()
-        serviceDiscovery.start()
-        ServiceProvider serviceProvider = serviceDiscovery
-                .serviceProviderBuilder()
-                .serviceName("servers")
-                .build()
-        serviceProvider.start();
-        Zookeeper.setServiceProvider(serviceProvider);
-        ServiceCache serviceCache = serviceDiscovery.serviceCacheBuilder().name("servers").build();
-        serviceCache.start();
-        Zookeeper.setServiceCache(serviceCache);
     }
 
     private static void initDynamo() {
@@ -74,11 +52,11 @@ class BootStrap {
                 list.add(Integer.parseInt(s.payload as String));
             }
         }
-        println(list)
+        println("Bootstrap - peers id: "+list);
         int myNumber = 0;
         if(list.isEmpty()) {
             myNumber = 0;
-            println("first node - 0");
+            println("Bootstrap - server id 0 (first server)");
         } else {
             int most = -1;
             list.sort();
@@ -95,7 +73,7 @@ class BootStrap {
                 }
             }
         }
-        println("selected number "+myNumber)
+        println("Bootstrap - server id "+myNumber)
         DynamoParams.setMyNumber(myNumber);
     }
 }

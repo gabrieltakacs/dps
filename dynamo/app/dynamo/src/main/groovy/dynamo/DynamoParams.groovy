@@ -7,8 +7,8 @@ class DynamoParams {
     public static final int replicas = 3;
     public static final int readQuorum = 2;
     public static final int writeQuorum = 2;
-    private static List<ServiceInstance> instanceList = null;
 
+    private static List<ServiceInstance> lastInstanceList = null;
     private static Integer myNumber = null;
 
     private DynamoParams() {
@@ -23,11 +23,11 @@ class DynamoParams {
         return myNumber;
     }
 
-    public static void setInstanceList(List<ServiceInstance> instanceList) {
-        this.instanceList = new ArrayList<ServiceInstance>(instanceList);
+    public static void setLastInstanceList(List<ServiceInstance> instanceList) {
+        lastInstanceList = new ArrayList<ServiceInstance>(instanceList);
     }
 
-    public static List<ServiceInstance> getInstanceList() {
-        return instanceList;
+    public static List<ServiceInstance> getLastInstanceList() {
+        return lastInstanceList;
     }
 }

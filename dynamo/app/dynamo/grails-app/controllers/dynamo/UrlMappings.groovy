@@ -16,6 +16,18 @@ class UrlMappings {
             controller = 'Dynamo'
             action = [GET: "getData"]
         }
+        "/api/v1.0/getAll/" {
+            controller = 'Dynamo'
+            action = [GET: "getAll"]
+        }
+        "/api/v1.0/getRange/" {
+            controller = 'Dynamo'
+            action = [GET: "getRange"]
+        }
+        "/api/v1.0/clear/" {
+            controller = 'Dynamo'
+            action = [GET: "clear"]
+        }
         "/api/v1.0/clockNumber/" {
             controller = 'Main'
             action = [GET: "number"]
