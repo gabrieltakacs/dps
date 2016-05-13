@@ -5,11 +5,10 @@ class KeyValue {
     int hash;
     String key;
     String value;
-    Map vectorClock = new HashMap()
+    Map<String, Integer> vectorClock = new HashMap()
 
     static constraints = {
         key nullable: true;
-        vectorClock nullable: true, blank: true;
         value nullable: true;
     }
 

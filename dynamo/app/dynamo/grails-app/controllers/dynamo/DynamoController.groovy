@@ -1,13 +1,12 @@
 package dynamo
 
 import grails.converters.JSON
+import groovy.json.JsonSlurper
 import groovyx.net.http.ContentType
 import groovyx.net.http.HTTPBuilder
-import groovyx.net.http.HttpResponseException
 import groovyx.net.http.Method
 import org.apache.curator.x.discovery.ServiceInstance
 import org.grails.web.json.JSONElement
-import org.grails.web.json.JSONObject
 
 class DynamoController {
 
@@ -38,46 +37,68 @@ class DynamoController {
         }
     }
 
-    void saveImpl(String key, String value, int hash) {
-        //TODO vectorclock
+    private static boolean saveImpl(String key, String value, int hash, Map vectorclock) {
+        println("save vector: "+vectorclock)
         KeyValue kv = KeyValue.findOrCreateByKey(key);
         kv.setValue(value);
         kv.setHash(hash)
-        kv.vectorClock.put(DynamoParams.myNumber, DynamoParams.myNumber)
+        kv.vectorClock = vectorclock;
         kv.save(flush: true, failOnError: true);
+        return true;
     }
 
     def postData() {
         String key = params.key as String;
         int hash = KeyValue.calculateHash(key);
         List<ServiceInstance> instances = Zookeeper.getResponsibleServers(hash);
+        int quorum = DynamoParams.writeQuorum
+        if (params.quorum) {
+            quorum = params.quorum as Integer
+        }
+        Map vectorclock = new HashMap();
+        if(params.vectorclock) {
+            vectorclock = new JsonSlurper().parseText(params.vectorclock)
+        }
 
         //som zodpovedný za správu
-        if (instances.contains(InetAddress.getLocalHost().getHostAddress())) {
+        if (contains(instances)) {
             //nie som koordinátor
             if(params.redirected == "true") {
                 Map obj = new LinkedHashMap();
                 log.debug("postData - received redirected response: "+params);
-                saveImpl(key, params.value as String, hash)
-                obj.put("status", "success");
+                saveImpl(key, params.value as String, hash, vectorclock)
+                obj.put("status", "success")
                 response.status = 200
                 render obj as JSON
             } else {
                 //som koordinátor - pošle požiadavku ostatným serverom
+                int last = 0;
+                if(vectorclock?.containsKey(DynamoParams.myNumber as String)) {
+                    last = vectorclock.get(DynamoParams.myNumber as String) as Integer
+                }
+                last++;
+                vectorclock.put(DynamoParams.myNumber as String, last)
                 int success = 0;
                 for(ServiceInstance i:instances) {
                     if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
                         log.debug("postData - storing data: "+params);
-                        saveImpl(key, params.value as String, hash)
-                        success++;
+                        if (saveImpl(key, params.value as String, hash, vectorclock)) {
+                            success++;
+                        } else {
+                            Map obj = new LinkedHashMap();
+                            obj.put("status", "error - old data");
+                            response.status = 200
+                            render obj as JSON
+                            return
+                        }
                     } else { //prepošle ďalej
-                        //TODO paralelne + synchronizovať?
                         String url = "http://"+i.address+":"+i.port;
                         log.debug("postData - resending to: "+url);
                         String path = "/api/v1.0/post"
                         Map query = new LinkedHashMap();
                         query.put("key", params.key);
                         query.put("value", params.value);
+                        query.put("vectorclock", vectorclock);
                         query.put("redirected", true);
                         String resp = rest(url, path, query, Method.POST)
                         if(resp == null) continue
@@ -89,9 +110,12 @@ class DynamoController {
                     }
                 }
                 Map obj = new LinkedHashMap();
-                obj.put("status", "success: "+success);
-                obj.put("hash", Integer.toString(hash));
-
+                if(success >= quorum) {
+                    obj.put("status", "success: "+success);
+                    obj.put("hash", Integer.toString(hash));
+                } else {
+                    obj.put("status", "quorum not met");
+                }
                 response.status = 200
                 render obj as JSON
             }
@@ -102,12 +126,17 @@ class DynamoController {
             Map query = new LinkedHashMap();
             query.put("key", params.key);
             query.put("value", params.value);
+            query.put("vectorclock", params.vectorclock);
             query.put("redirected", false);
             String resp = rest(url, path, query, Method.POST)
             if(resp == null) {
                 response.status = 500
+                Map obj = new LinkedHashMap();
+                obj.put("status", "error");
+                render obj as JSON
+                return
             }
-            render resp;
+            render resp as String
         }
     }
 
@@ -117,7 +146,7 @@ class DynamoController {
         List<ServiceInstance> instances = Zookeeper.getResponsibleServers(hash);
 
         //som zodpovedný za správu
-        if (instances.contains(InetAddress.getLocalHost().getHostAddress())) {
+        if (contains(instances)) {
             //nie som koordinátor
             if (params.redirected == "true") {
                 Map obj = new LinkedHashMap();
@@ -191,8 +220,12 @@ class DynamoController {
             String resp = rest(url, path, query)
             if(resp == null) {
                 response.status = 500
+                Map obj = new LinkedHashMap();
+                obj.put("status", "error");
+                render obj as JSON
+                return
             }
-            render resp;
+            render resp as String;
         }
     }
 
@@ -238,6 +271,15 @@ class DynamoController {
     def clear() {
         KeyValue.executeUpdate('delete from KeyValue')
         render "cleared"
+    }
+
+    private static boolean contains(List<ServiceInstance> instances) {
+        for(ServiceInstance i:instances) {
+            if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }
