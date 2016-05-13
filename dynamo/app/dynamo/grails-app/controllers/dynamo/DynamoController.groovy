@@ -32,7 +32,8 @@ class DynamoController {
             }
             return ret
         } catch (Exception ex) {
-            ex.printStackTrace()
+            println(ex.message)
+           // ex.printStackTrace()
             return null
         }
     }
@@ -87,7 +88,6 @@ class DynamoController {
                         Map query = new LinkedHashMap();
                         query.put("key", params.key);
                         query.put("value", params.value);
-                        println(vectorclock as JSON)
                         query.put("vectorclock", vectorclock as JSON);
                         query.put("redirected", true);
                         String resp = rest(url, path, query, Method.POST)
@@ -115,9 +115,9 @@ class DynamoController {
             String path = "/api/v1.0/post"
             Map query = new LinkedHashMap();
             query.put("key", params.key);
+            query.put("quorum", params.quorum);
             query.put("value", params.value);
             query.put("vectorclock", params.vectorclock);
-            query.put("redirected", false);
             String resp = rest(url, path, query, Method.POST)
             if(resp == null) {
                 response.status = 500
@@ -134,41 +134,31 @@ class DynamoController {
         String key = params.key;
         int hash = KeyValue.calculateHash(key);
         List<ServiceInstance> instances = Zookeeper.getResponsibleServers(hash);
+        int quorum = DynamoParams.readQuorum
+        if (params.quorum) {
+            quorum = params.quorum as Integer
+        }
 
         //som zodpovedný za správu
         if (contains(instances)) {
             //nie som koordinátor
             if (params.redirected == "true") {
-                Map obj = new LinkedHashMap();
                 log.debug("getData - received redirected response: " + params);
-                KeyValue kv = KeyValue.findByKey(key);
-                if (kv?.value != null) {
-                    obj.put("status", "success");
-                    obj.put("value", kv.value);
-                } else {
-                    obj.put("status", "no data");
-                }
+                def kv = KeyValue.findAllByKey(key);
                 response.status = 200
-                render obj as JSON
+                render kv as JSON
             } else {
-                //pošle požiadavku serverom, pre ktoré je určená (zistí podla hashu klúča
-                Set<String> set = new HashSet<>();//values, môžu sa lýšiť
-                List<String> debugList = new ArrayList<>();
+                //pošle požiadavku serverom, pre ktoré je určená
+                List list = new ArrayList();
                 int success = 0;
                 for (ServiceInstance i : instances) {
                     //som jeden z príjemcov
-                    if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
+                    if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {//ja
                         log.debug("getData - getting data: " + params);
-                        KeyValue kv = KeyValue.findByKey(key);
-                        String s = "[" + i.payload + "]" + " " + i.address + " (this)";
-                        if (kv?.value != null) {
-                            set.add(kv.value);
+                        list.addAll(KeyValue.findAllByKey(key))
+                        if(!list.empty) {
                             success++;
-                            s += " " + kv.value;
-                        } else {
-                            s += " no data";
                         }
-                        debugList.add(s);
                     } else { //prepošle ďalej
                         String url = "http://" + i.address + ":" + i.port;
                         log.debug("postData - resending to: " + url);
@@ -180,25 +170,24 @@ class DynamoController {
                         if (resp == null) continue
                         JSONElement a = JSON.parse(resp);
                         log.debug("getData - received response:");
-                        String s = "[" + i.payload + "]" + " " + i.address;
-                        if (a?.status == "success" && a?.value != null) {
-                            set.add(a.value);
+                        if (!a.empty) {
+                            list.addAll(a)
                             success++;
-                            s += " " + a.value;
-                        } else {
-                            s += " no data";
                         }
-                        debugList.add(s);
                     }
                 }
-                Map obj = new LinkedHashMap();
-                obj.put("key", params.key);
-                obj.put("hash", hash);
-                obj.put("status", "success: " + success);
-                obj.put("values", set);
-                obj.put("debug-values", debugList);
+                Map obj = new LinkedHashMap()
+                if(success >= quorum) {
+                    obj.put("status", "success: "+success);
+                    obj.put("hash", Integer.toString(hash));
+                    obj.put("values", list);
+                } else {
+                    obj.put("status", "quorum not met");
+                }
                 response.status = 200
-                render obj as JSON
+                def json = obj as JSON
+                json.prettyPrint = true
+                json.render response
             }
         } else {
             String url = "http://"+instances.get(0).address+":"+instances.get(0).port;
@@ -206,7 +195,6 @@ class DynamoController {
             String path = "/api/v1.0/get"
             Map query = new HashMap();
             query.put("key", params.key);
-            query.put("redirected", true);
             String resp = rest(url, path, query)
             if(resp == null) {
                 response.status = 500
@@ -219,26 +207,102 @@ class DynamoController {
         }
     }
 
+    //TODO?
+    def deleteData() {
+        /*String key = params.key;
+        int hash = KeyValue.calculateHash(key);
+        List<ServiceInstance> instances = Zookeeper.getResponsibleServers(hash);
+
+        //som zodpovedný za správu
+        if (contains(instances)) {
+            //nie som koordinátor
+            if (params.redirected == "true") {
+                log.debug("getData - received redirected response: " + params);
+                KeyValue kv = KeyValue.findAllByKey(key);
+                response.status = 200
+                render kv as JSON
+            } else {
+                //pošle požiadavku serverom, pre ktoré je určená
+                List list = new ArrayList();
+                int success = 0;
+                for (ServiceInstance i : instances) {
+                    //som jeden z príjemcov
+                    if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {//ja
+                        log.debug("getData - getting data: " + params);
+                        list.addAll(KeyValue.findAllByKey(key))
+                    } else { //prepošle ďalej
+                        String url = "http://" + i.address + ":" + i.port;
+                        log.debug("postData - resending to: " + url);
+                        String path = "/api/v1.0/get"
+                        Map query = new HashMap();
+                        query.put("key", params.key);
+                        query.put("redirected", true);
+                        String resp = rest(url, path, query)
+                        if (resp == null) continue
+                        JSONElement a = JSON.parse(resp);
+                        log.debug("getData - received response:");
+                        if (a?.status == "success") {
+                            list.addAll(a)
+                            success++;
+                        }
+                    }
+                }
+                Map obj = new LinkedHashMap()
+                obj.put("status", "success: " + success);
+                obj.put("values", list);
+                response.status = 200
+                render obj as JSON
+            }
+        } else {
+            String url = "http://"+instances.get(0).address+":"+instances.get(0).port;
+            log.debug("getData - resending to coordinator: "+url);
+            String path = "/api/v1.0/get"
+            Map query = new HashMap();
+            query.put("key", params.key);
+            String resp = rest(url, path, query)
+            if(resp == null) {
+                response.status = 500
+                Map obj = new LinkedHashMap();
+                obj.put("status", "error");
+                render obj as JSON
+                return
+            }
+            render resp as String;
+        }*/
+    }
+
     def getRange() {
         if(!params.from || !params.to) {
             render "missing parameters from & to"
         }
         Integer from = params.from as Integer
         Integer to = params.to as Integer
-        render KeyValue.findAllByHashBetween(from, to) as JSON
+        if(from > to) {
+            render KeyValue.findAllByHashBetweenOrHashBetween(0, to, from, DynamoParams.maxClockNumber-1) as JSON
+        } else {
+            render KeyValue.findAllByHashBetween(from, to) as JSON
+        }
     }
 
     def getAll() {
         int[] m = Replicator.getCurrentRange();
         if(params.redirected == "true") {
-            render KeyValue.findAllByHashBetween(m[0], m[1]) as JSON
+            if(m[0] > m[1]) {
+                render KeyValue.findAllByHashBetweenOrHashBetween(0, m[1], m[0], DynamoParams.maxClockNumber-1) as JSON
+            } else {
+                render KeyValue.findAllByHashBetween(m[0], m[1]) as JSON
+            }
         } else {
             //pošle požiadavku serverom, pre ktoré je určená (zistí podla hashu klúča
             List<ServiceInstance> instances = Zookeeper.serviceProvider.allInstances
             Map<String, List> dataMap = new LinkedHashMap<>();
             for(ServiceInstance i:instances) {
                 if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
-                    dataMap.put(i.address.toString(), KeyValue.findAllByHashBetween(m[0], m[1]));
+                    if(m[0] > m[1]) {
+                        dataMap.put(i.address.toString(),KeyValue.findAllByHashBetweenOrHashBetween(0, m[1], m[0], DynamoParams.maxClockNumber-1));
+                    } else {
+                        dataMap.put(i.address.toString(),KeyValue.findAllByHashBetween(m[0], m[1]));
+                    }
                 } else {
                     String url = "http://"+i.address+":"+i.port;
                     log.debug("postData - resending to: "+url);
@@ -248,8 +312,7 @@ class DynamoController {
                     def resp = rest(url, path, query)
                     if(!resp) continue
                     JSONElement a = JSON.parse(resp);
-                    def list = a
-                    dataMap.put(i.address.toString(), list);
+                    dataMap.put(i.address.toString(), a);
                 }
             }
             def json = dataMap as JSON
