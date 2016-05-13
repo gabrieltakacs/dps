@@ -229,16 +229,16 @@ class DynamoController {
     }
 
     def getAll() {
+        int[] m = Replicator.getCurrentRange();
         if(params.redirected == "true") {
-            render KeyValue.findAll() as JSON
+            render KeyValue.findAllByHashBetween(m[0], m[1]) as JSON
         } else {
             //pošle požiadavku serverom, pre ktoré je určená (zistí podla hashu klúča
             List<ServiceInstance> instances = Zookeeper.serviceProvider.allInstances
             Map<String, List> dataMap = new LinkedHashMap<>();
             for(ServiceInstance i:instances) {
                 if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
-
-                    dataMap.put(i.address.toString(), KeyValue.findAll());
+                    dataMap.put(i.address.toString(), KeyValue.findAllByHashBetween(m[0], m[1]));
                 } else {
                     String url = "http://"+i.address+":"+i.port;
                     log.debug("postData - resending to: "+url);

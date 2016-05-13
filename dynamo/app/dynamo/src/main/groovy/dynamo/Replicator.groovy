@@ -16,12 +16,12 @@ class Replicator {
     }
 
     public synchronized void process() {
-        InterProcessMutex mutex = new InterProcessMutex(Zookeeper.getCuratorFramework(), "/lock");
-        println("Replicator - accquiring lock")
-        mutex.acquire()
+       // InterProcessMutex mutex = new InterProcessMutex(Zookeeper.getCuratorFramework(), "/lock");
+       // println("Replicator - accquiring lock")
+       // mutex.acquire()
         println("Replicator - lock acquired")
         checkData();
-        mutex.release();
+       // mutex.release();
         println("Replicator - lock released")
     }
 
@@ -133,8 +133,7 @@ class Replicator {
     }
 
     //zistí rozsah, za ktorý bol zodpovedný predtým
-    //stav - funkčné
-    private static int[] getCurrentRange() {
+    public static int[] getCurrentRange() {
         int min = DynamoParams.myNumber;
         int max = (DynamoParams.myNumber - 1 + DynamoParams.maxClockNumber) % DynamoParams.maxClockNumber;
         int count = 0;
@@ -144,7 +143,7 @@ class Replicator {
             int instanceKey = Integer.parseInt(instance.payload as String);
             if(instanceKey < DynamoParams.myNumber) {
                 min = instanceKey;
-                println("Debug: new min = "+min);
+                //println("Debug: new min = "+min);
                 count++;
                 if(count >= DynamoParams.replicas) {
                     break;
@@ -156,7 +155,7 @@ class Replicator {
             while(count < Math.min(DynamoParams.replicas, all.size())) {
                 int key = Integer.parseInt(all.get(i).payload as String)
                 min = key;
-                println("Debug: new min = "+min);
+              //  println("Debug: new min = "+min);
                 i--;
                 count++;
             }
