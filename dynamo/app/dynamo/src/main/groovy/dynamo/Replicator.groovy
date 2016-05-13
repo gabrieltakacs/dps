@@ -1,7 +1,6 @@
 package dynamo
 
 import grails.converters.JSON
-import grails.transaction.Transactional
 import groovyx.net.http.ContentType
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
@@ -165,7 +164,6 @@ class Replicator {
         return [min , max];
     }
 
-    //TODO oddeliť niekam
     static def rest(String baseUrl, String path, query, Method method = Method.GET) {
         try {
             def ret = null
@@ -213,8 +211,6 @@ class Replicator {
         return instances;
     }
 
-    def downloadService
-
     private static void downloadRange(Integer[] range, boolean init) {
         println("downloading range "+range[0]+" -> "+range[1])
         int from = range[0]
@@ -245,12 +241,8 @@ class Replicator {
                     parsedList.each {
                         JSONObject jsonObject ->
                             println("next object: "+jsonObject)
-                            if(KeyValue.findByKey(jsonObject.get("key")) == null) {
-                                println("not found, storing")
-                                KeyValue kv = new KeyValue(jsonObject)
-                                kv.save();
-                                println("saved keyValue: " + kv);
-                            }
+                            KeyValue kv = new KeyValue(jsonObject)
+                            KeyValue.saveImpl(kv.key, kv.value, kv.hash, kv.vectorClock)
                     }
                 }
                 println("downloaded from server")

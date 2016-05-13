@@ -37,55 +37,6 @@ class DynamoController {
         }
     }
 
-    /**
-     * @return -1, ak je záznam starší, 0 ak sa nedá porovnať, 1 ak je novší
-     */
-    private static int checkVC(Map vectorClock, Map other) {
-        boolean newer = false, older = false;
-        Set all = new LinkedHashSet();all.addAll(other.keySet());all.addAll(vectorClock.keySet())
-        for(def o:all) {
-            int cur = 0;
-            int val = 0;
-            if(vectorClock.containsKey(o)) {
-                cur = vectorClock.get(o) as Integer
-            }
-            if(other.containsKey(o)) {
-                val = other.get(o) as Integer
-            }
-            if(cur < val) {
-                older = true;
-            } else if(cur > val){
-                newer = true;
-            }
-        }
-        if(!newer) return -1;
-        if(!older) return 1;
-        return 0;
-    }
-
-    private static boolean saveImpl(String key, String value, int hash, Map vectorclock) {
-        List<KeyValue> list = KeyValue.findAllByKey(key);
-        boolean toSave = true;
-        for(KeyValue k: list) {
-            Integer status = checkVC(vectorclock, k.getVectorClock());
-            if(status == 1) {//tento záznam je novší - zmaž starý
-                k.delete(flush: true)
-            }
-            if(status == -1) {//tento záznam je starší
-                toSave = false
-            }
-        }
-        if(toSave) {
-            KeyValue kv = new KeyValue()
-            kv.setKey(key)
-            kv.setValue(value);
-            kv.setHash(hash)
-            kv.vectorClock = vectorclock;
-            kv.save(flush: true, failOnError: true);
-        }
-        return toSave;
-    }
-
     def postData() {
         String key = params.key as String;
         int hash = KeyValue.calculateHash(key);
@@ -104,7 +55,7 @@ class DynamoController {
             if(params.redirected == "true") {
                 Map obj = new LinkedHashMap();
                 log.debug("postData - received redirected response: "+params);
-                saveImpl(key, params.value as String, hash, vectorclock)
+                KeyValue.saveImpl(key, params.value as String, hash, vectorclock)
                 obj.put("status", "success")
                 response.status = 200
                 render obj as JSON
@@ -120,7 +71,7 @@ class DynamoController {
                 for(ServiceInstance i:instances) {
                     if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
                         log.debug("postData - storing data: "+params);
-                        if (saveImpl(key, params.value as String, hash, vectorclock)) {
+                        if (KeyValue.saveImpl(key, params.value as String, hash, vectorclock)) {
                             success++;
                         } else {
                             Map obj = new LinkedHashMap();
