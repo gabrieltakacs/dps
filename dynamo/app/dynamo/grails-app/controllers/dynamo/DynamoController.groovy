@@ -42,7 +42,7 @@ class DynamoController {
      */
     private static int checkVC(Map vectorClock, Map other) {
         boolean newer = false, older = false;
-        Set all = new HashSet();all.addAll(other.keySet());all.addAll(vectorClock.keySet())
+        Set all = new LinkedHashSet();all.addAll(other.keySet());all.addAll(vectorClock.keySet())
         for(def o:all) {
             int cur = 0;
             int val = 0;
@@ -64,12 +64,11 @@ class DynamoController {
     }
 
     private static boolean saveImpl(String key, String value, int hash, Map vectorclock) {
-        println("save vector: "+vectorclock)
+       // println("save vector: "+vectorclock)
         List<KeyValue> list = KeyValue.findAllByKey(key);
         boolean toSave = true;
         for(KeyValue k: list) {
             Integer status = checkVC(vectorclock, k.getVectorClock());
-            println("comparing "+vectorclock+" with "+k.getVectorClock()+" result "+status);
             if(status == 1) {//tento záznam je novší - zmaž starý
                 k.delete(flush: true)
             }
@@ -100,14 +99,13 @@ class DynamoController {
         if(params.vectorclock) {
             vectorclock = new JsonSlurper().parseText(params.vectorclock)
         }
-
         //som zodpovedný za správu
         if (contains(instances)) {
             //nie som koordinátor
             if(params.redirected == "true") {
                 Map obj = new LinkedHashMap();
                 log.debug("postData - received redirected response: "+params);
-                saveImpl(key, params.value as String, hash, vectorclock)
+                saveImpl(key, params.value as String, hash, params.vectorclock as Map)
                 obj.put("status", "success")
                 response.status = 200
                 render obj as JSON
@@ -139,7 +137,7 @@ class DynamoController {
                         Map query = new LinkedHashMap();
                         query.put("key", params.key);
                         query.put("value", params.value);
-                        query.put("vectorclock", vectorclock);
+                        query.put("vectorclock", vectorclock as JSON);
                         query.put("redirected", true);
                         String resp = rest(url, path, query, Method.POST)
                         if(resp == null) continue
@@ -167,7 +165,7 @@ class DynamoController {
             Map query = new LinkedHashMap();
             query.put("key", params.key);
             query.put("value", params.value);
-            query.put("vectorclock", params.vectorclock);
+            query.put("vectorclock");
             query.put("redirected", false);
             String resp = rest(url, path, query, Method.POST)
             if(resp == null) {
@@ -285,7 +283,7 @@ class DynamoController {
         } else {
             //pošle požiadavku serverom, pre ktoré je určená (zistí podla hashu klúča
             List<ServiceInstance> instances = Zookeeper.serviceProvider.allInstances
-            Map<String, List> dataMap = new HashMap<>();
+            Map<String, List> dataMap = new LinkedHashMap<>();
             for(ServiceInstance i:instances) {
                 if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
 
