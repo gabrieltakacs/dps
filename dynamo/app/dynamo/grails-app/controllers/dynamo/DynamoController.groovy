@@ -64,7 +64,6 @@ class DynamoController {
     }
 
     private static boolean saveImpl(String key, String value, int hash, Map vectorclock) {
-       // println("save vector: "+vectorclock)
         List<KeyValue> list = KeyValue.findAllByKey(key);
         boolean toSave = true;
         for(KeyValue k: list) {
@@ -105,7 +104,7 @@ class DynamoController {
             if(params.redirected == "true") {
                 Map obj = new LinkedHashMap();
                 log.debug("postData - received redirected response: "+params);
-                saveImpl(key, params.value as String, hash, params.vectorclock as Map)
+                saveImpl(key, params.value as String, hash, vectorclock)
                 obj.put("status", "success")
                 response.status = 200
                 render obj as JSON
@@ -137,6 +136,7 @@ class DynamoController {
                         Map query = new LinkedHashMap();
                         query.put("key", params.key);
                         query.put("value", params.value);
+                        println(vectorclock as JSON)
                         query.put("vectorclock", vectorclock as JSON);
                         query.put("redirected", true);
                         String resp = rest(url, path, query, Method.POST)
@@ -165,7 +165,7 @@ class DynamoController {
             Map query = new LinkedHashMap();
             query.put("key", params.key);
             query.put("value", params.value);
-            query.put("vectorclock");
+            query.put("vectorclock", params.vectorclock);
             query.put("redirected", false);
             String resp = rest(url, path, query, Method.POST)
             if(resp == null) {
