@@ -14,12 +14,12 @@ class DynamoController {
         render DynamoParams.myNumber;
     }
 
-    static def rest(String baseUrl, String path, query, Method method = Method.GET) {
+    static def rest(String baseUrl, String path, query, Method method = Method.GET, Integer timeout = new Integer(1000)) {
         try {
             def ret = null
             def http = new HTTPBuilder(baseUrl)
-            http.getClient().getParams().setParameter("http.connection.timeout", new Integer(1000))
-            http.getClient().getParams().setParameter("http.socket.timeout", new Integer(1000))
+            http.getClient().getParams().setParameter("http.connection.timeout", timeout)
+            http.getClient().getParams().setParameter("http.socket.timeout", timeout)
 
             http.request(method, ContentType.TEXT) {
                 uri.path = path
@@ -118,15 +118,15 @@ class DynamoController {
             query.put("quorum", params.quorum);
             query.put("value", params.value);
             query.put("vectorclock", params.vectorclock);
-            String resp = rest(url, path, query, Method.POST)
+            String resp = rest(url, path, query, Method.POST, new Integer(5000))
             if(resp == null) {
                 response.status = 500
                 Map obj = new LinkedHashMap();
-                obj.put("status", "error");
+                obj.put("status", "error - no response from coordinator");
                 render obj as JSON
                 return
             }
-            render resp as String
+            render resp as JSON
         }
     }
 
@@ -195,15 +195,15 @@ class DynamoController {
             String path = "/api/v1.0/get"
             Map query = new HashMap();
             query.put("key", params.key);
-            String resp = rest(url, path, query)
+            String resp = rest(url, path, query, Method.GET, new Integer(5000))
             if(resp == null) {
                 response.status = 500
                 Map obj = new LinkedHashMap();
-                obj.put("status", "error");
+                obj.put("status", "error - no response from coordinator");
                 render obj as JSON
                 return
             }
-            render resp as String;
+            render resp as JSON;
         }
     }
 
