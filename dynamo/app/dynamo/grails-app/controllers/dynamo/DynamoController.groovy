@@ -207,9 +207,8 @@ class DynamoController {
         }
     }
 
-    //TODO?
     def deleteData() {
-        /*String key = params.key;
+        String key = params.key;
         int hash = KeyValue.calculateHash(key);
         List<ServiceInstance> instances = Zookeeper.getResponsibleServers(hash);
 
@@ -217,46 +216,45 @@ class DynamoController {
         if (contains(instances)) {
             //nie som koordinátor
             if (params.redirected == "true") {
-                log.debug("getData - received redirected response: " + params);
-                KeyValue kv = KeyValue.findAllByKey(key);
+                log.debug("deleteData - received redirected response: " + params);
+                KeyValue.executeUpdate("delete KeyValue c where c.key = :key", [key: key])
+                Map obj = new LinkedHashMap();
+                obj.put("status", "success");
                 response.status = 200
-                render kv as JSON
+                render obj as JSON
             } else {
                 //pošle požiadavku serverom, pre ktoré je určená
-                List list = new ArrayList();
                 int success = 0;
                 for (ServiceInstance i : instances) {
                     //som jeden z príjemcov
-                    if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {//ja
-                        log.debug("getData - getting data: " + params);
-                        list.addAll(KeyValue.findAllByKey(key))
+                    if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
+                        log.debug("deleteData - deleting data: " + params);
+                        KeyValue.executeUpdate("delete KeyValue c where c.key = :key", [key: key])
                     } else { //prepošle ďalej
                         String url = "http://" + i.address + ":" + i.port;
-                        log.debug("postData - resending to: " + url);
-                        String path = "/api/v1.0/get"
+                        log.debug("deleteData - resending to: " + url);
+                        String path = "/api/v1.0/delete"
                         Map query = new HashMap();
                         query.put("key", params.key);
                         query.put("redirected", true);
                         String resp = rest(url, path, query)
                         if (resp == null) continue
                         JSONElement a = JSON.parse(resp);
-                        log.debug("getData - received response:");
+                        log.debug("deleteData - received response:");
                         if (a?.status == "success") {
-                            list.addAll(a)
                             success++;
                         }
                     }
                 }
                 Map obj = new LinkedHashMap()
                 obj.put("status", "success: " + success);
-                obj.put("values", list);
                 response.status = 200
                 render obj as JSON
             }
         } else {
             String url = "http://"+instances.get(0).address+":"+instances.get(0).port;
             log.debug("getData - resending to coordinator: "+url);
-            String path = "/api/v1.0/get"
+            String path = "/api/v1.0/delete"
             Map query = new HashMap();
             query.put("key", params.key);
             String resp = rest(url, path, query)
@@ -267,8 +265,8 @@ class DynamoController {
                 render obj as JSON
                 return
             }
-            render resp as String;
-        }*/
+            render resp as JSON;
+        }
     }
 
     def getRange() {

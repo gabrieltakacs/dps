@@ -32,6 +32,10 @@ class UrlMappings {
             controller = 'Main'
             action = [GET: "number"]
         }
+        "/api/v1.0/delete/" {
+            controller = 'Dynamo'
+            action = [DELETE: "deleteData"]
+        }
         "/"(controller:"Main", action:"index")
        // "/"(view:"/index")
         "500"(view:'/error')
