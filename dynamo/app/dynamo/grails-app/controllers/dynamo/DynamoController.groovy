@@ -126,7 +126,7 @@ class DynamoController {
                 render obj as JSON
                 return
             }
-            render resp as JSON
+            render resp as String
         }
     }
 
@@ -203,7 +203,7 @@ class DynamoController {
                 render obj as JSON
                 return
             }
-            render resp as JSON;
+            render resp as String;
         }
     }
 
@@ -257,7 +257,7 @@ class DynamoController {
             String path = "/api/v1.0/delete"
             Map query = new HashMap();
             query.put("key", params.key);
-            String resp = rest(url, path, query)
+            String resp = rest(url, path, query, Method.DELETE, new Integer(5000))
             if(resp == null) {
                 response.status = 500
                 Map obj = new LinkedHashMap();
@@ -265,7 +265,7 @@ class DynamoController {
                 render obj as JSON
                 return
             }
-            render resp as JSON;
+            render resp as String;
         }
     }
 
