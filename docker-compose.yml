@@ -1,51 +1,42 @@
-zookeeper:
-  build: ./zookeeper
-  container_name: dps-zookeeper
-  hostname: zookeeper
-  ports:
-    - "2181:2181"
-elasticsearch:
-  image: elasticsearch:2.2.1
-  container_name: dps-elasticsearch
-  command: elasticsearch -Des.network.host=0.0.0.0
-  hostname: elasticsearch
-  ports:
-      - "9200:9200"
-      - "9300:9300"
-logstash:
-  image: logstash:2.2.2
-  hostname: logstash
-  container_name: dps-logstash
-  command: logstash -f /etc/logstash/conf.d/logstash.conf
-  volumes:
-    - ./logstash/config:/etc/logstash/conf.d
-  ports:
-    - "5000:5000"
-  expose:
-    - "5000"
-  links:
-    - elasticsearch
-    - zookeeper
-kibana:
-  build: ./kibana/
-  container_name: dps-kibana
-  hostname: kibana
-  volumes:
-    - ./kibana/config/:/opt/kibana/config/
-  ports:
-    - "5601:5601"
-  links:
-    - elasticsearch
-proxy:
-  build: ./proxy
-  container_name: dps-proxy
-  ports:
-    - "80:8080"
-  links:
-    - zookeeper
-    - logstash
-dynamo:
-  build: ./dynamo
-  links:
-    - zookeeper
-    - logstash
+version: '2'
+services:
+ zookeeper:
+   build: ./zookeeper
+   container_name: dps-zookeeper
+   hostname: zookeeper
+   ports:
+     - "2181:2181"
+ elasticsearch:
+   build: ./elasticsearch
+   container_name: dps-elasticsearch
+   command: elasticsearch -Des.network.host=0.0.0.0
+   hostname: elasticsearch
+   ports:
+       - "9200:9200"
+       - "9300:9300"
+ logstash:
+   build: ./logstash
+   hostname: logstash
+   container_name: dps-logstash
+   command: logstash -f /etc/logstash/conf.d/logstash.conf
+   ports:
+     - "5000:5000"
+   expose:
+     - "5000"
+ kibana:
+   build: ./kibana/
+   container_name: dps-kibana
+   hostname: kibana
+   ports:
+     - "5691:5691"
+ proxy:
+   build: ./proxy
+   container_name: dps-proxy
+   ports:
+     - "80:8080"
+ dynamo:
+   build: ./dynamo
+networks:
+  default:
+    external:
+      name: DPS
