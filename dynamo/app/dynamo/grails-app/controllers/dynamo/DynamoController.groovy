@@ -230,6 +230,7 @@ class DynamoController {
                     if (InetAddress.getLocalHost().getHostAddress().equals(i.address)) {
                         log.debug("deleteData - deleting data: " + params);
                         KeyValue.executeUpdate("delete KeyValue c where c.key = :key", [key: key])
+                        success++;
                     } else { //prepošle ďalej
                         String url = "http://" + i.address + ":" + i.port;
                         log.debug("deleteData - resending to: " + url);
@@ -237,7 +238,7 @@ class DynamoController {
                         Map query = new HashMap();
                         query.put("key", params.key);
                         query.put("redirected", true);
-                        String resp = rest(url, path, query)
+                        String resp = rest(url, path, query, Method.DELETE)
                         if (resp == null) continue
                         JSONElement a = JSON.parse(resp);
                         log.debug("deleteData - received response:");
@@ -261,7 +262,7 @@ class DynamoController {
             if(resp == null) {
                 response.status = 500
                 Map obj = new LinkedHashMap();
-                obj.put("status", "error");
+                obj.put("status", "error - no response from coordinator");
                 render obj as JSON
                 return
             }
@@ -283,7 +284,7 @@ class DynamoController {
     }
 
     def getAll() {
-        int[] m = Replicator.getCurrentRange();
+        int[] m = getCurrentRange();
         if(params.redirected == "true") {
             if(m[0] > m[1]) {
                 render KeyValue.findAllByHashBetweenOrHashBetween(0, m[1], m[0], DynamoParams.maxClockNumber-1) as JSON
@@ -333,4 +334,31 @@ class DynamoController {
         return false;
     }
 
+    public static int[] getCurrentRange() {
+        int min = DynamoParams.myNumber;
+        int max = (DynamoParams.myNumber - 1 + DynamoParams.maxClockNumber) % DynamoParams.maxClockNumber;
+        int count = 0;
+        List<ServiceInstance> all = Zookeeper.getSortedServices();
+        for (int i=all.size()-1; i>=0; i--) {
+            ServiceInstance instance = all.get(i);
+            int instanceKey = Integer.parseInt(instance.payload as String);
+            if(instanceKey < DynamoParams.myNumber) {
+                min = instanceKey;
+                count++;
+                if(count >= DynamoParams.replicas) {
+                    break;
+                }
+            }
+        }
+        if(count < DynamoParams.replicas && all.size() > count) {
+            int i=all.size()-1;
+            while(count < Math.min(DynamoParams.replicas, all.size())) {
+                int key = Integer.parseInt(all.get(i).payload as String)
+                min = key;
+                i--;
+                count++;
+            }
+        }
+        return [min , max];
+    }
 }

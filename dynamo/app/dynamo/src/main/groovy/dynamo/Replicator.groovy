@@ -16,18 +16,16 @@ class Replicator {
     }
 
     public synchronized void process() {
-       // InterProcessMutex mutex = new InterProcessMutex(Zookeeper.getCuratorFramework(), "/lock");
-       // println("Replicator - accquiring lock")
-       // mutex.acquire()
-        println("Replicator - lock acquired")
         checkData();
-       // mutex.release();
-        println("Replicator - lock released")
     }
 
     private static void checkData() {
         //vypočítanie rozsahu, ktorý máme uložený
         println("Replicator - checkData")
+        InterProcessMutex mutex = new InterProcessMutex(Zookeeper.getCuratorFramework(), "/lock");
+        println("Replicator - accquiring lock")
+        mutex.acquire()
+        println("Replicator - lock acquired")
         List<ServiceInstance> last = DynamoParams.getLastInstanceList();
         int[] range = null;
         boolean init;
@@ -41,6 +39,8 @@ class Replicator {
             init = false;
         }
         List<ServiceInstance> list = Zookeeper.getSortedServices();
+        mutex.release();
+        println("Replicator - lock released")
         List<Integer> ranges = getRequiredRange(list)
         println("Required range: "+ranges);
         List<Integer[]> needed = filterRanges(ranges, range);
