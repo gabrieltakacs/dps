@@ -13,6 +13,7 @@ filebeat:
       # Make sure not file is defined twice as this can lead to unexpected behaviour.
       paths:
         - /var/log/*.log
+        - /var/log/zabbix/*.log
         - /logFile.log
       # - c:\programdata\elasticsearch\logs\*
 
@@ -21,7 +22,7 @@ filebeat:
       # Some sample encodings:
       #   plain, utf-8, utf-16be-bom, utf-16be, utf-16le, big5, gb18030, gbk,
       #    hz-gb-2312, euc-kr, euc-jp, iso-2022-jp, shift-jis, ...
-      #encoding: plain
+      encoding: "US-ASCII"
 
       # Type of the files. Based on this the way the file is read is decided.
       # The different types cannot be mixed in one prospector
@@ -260,7 +261,6 @@ output:
 
       # Configure curve types for ECDHE based cipher suites
       #curve_types: []
-
 
   ### File as output
   #file:

@@ -1,0 +1,104 @@
+### pri prvom spusteni
+
+# vytvorime a spustime service discovery
+docker-machine create -d virtualbox default
+eval $(docker-machine env default)
+docker run -d -p "8500:8500" -h "consul" progrium/consul -server -bootstrap
+
+# vytvorime swarm managera
+docker-machine create -d virtualbox --swarm --swarm-master --swarm-discovery="consul://$(docker-machine ip default):8500" --engine-opt="cluster-store=consul://$(docker-machine ip default):8500" --engine-opt="cluster-advertise=eth1:2376" master-agent
+
+# vytvorime swarm nody
+docker-machine create -d virtualbox --swarm --swarm-discovery="consul://$(docker-machine ip default):8500" --engine-opt="cluster-store=consul://$(docker-machine ip default):8500" --engine-opt="cluster-advertise=eth1:2376" agent
+
+# skontrolujeme konfiguraciu
+eval $(docker-machine env --swarm master-agent)
+docker info
+docker ps
+
+### mozeme vytvorit aj bez tolkych parametrov, avsak potom je nutne na kazdej virtualke dopisat do suboru /var/lib/boot2docker/profile tieto moznosti
+# docker-machine create -d virtualbox default
+# docker-machine create -d virtualbox --swarm --swarm-master master-agent
+# docker-machine create -d virtualbox --swarm agent
+--------------------------------------------------------------------------------------------------------------
+####pri spustani uz existujucich virtualiek
+spustime vsetky virtualky
+
+### pri zmene IP adresy consulu (service discovery pre swarm) po restarte
+
+@ foreach swarmNode as [node name]
+docker-machine regenerate-certs
+docker-machine restart [node name]
+	docker-machine ssh [node name]
+	sudo vi /var/lib/boot2docker/profile
+	press I
+	edit
+		EXTRA_ARGS='
+		--label provider=virtualbox
+		--cluster-store=consul://ipckaConsulu:8500
+		--cluster-advertise eth1:2376
+		'
+	#	...
+	#	...
+	press ESC
+	type :wq
+	press ENTER
+	exit
+	docker-machine restart [node name]
+
+@ endoforeach
+
+
+### pri restarte virtualky musime znovu pospustat swarm procesy
+# ak boli spustene a nie su vymazane, najdeme ich meno prikazom- docker ps -a
+# a spustime ich prikazom- docker start [menoProcesu] !!!!!! ale iba ak sa nezmenila IP adresa consulu-vtedy treba pouzit nasledovne prikazy
+# alebo znova vytvorime nasledovne:
+
+# prepnut na ServiceDiscovery
+eval $(docker-machine env default)
+docker run -d -p "8500:8500" -h "consul" progrium/consul -server -bootstrap
+
+# prepnut na SwarmManagera a spustit znovu swarm manage a swarm join
+eval $(docker-machine env master-agent)
+
+docker run -p 3376:3376 -d -v /var/lib/boot2docker:/certs:ro swarm manage -H tcp://0.0.0.0:3376 --tlsverify --tlscacert=certs/ca.pem --tlscert=certs/server.pem --tlskey=certs/server-key.pem --strategy spread --advertise $(docker-machine ip master-agent):3376 consul://$(docker-machine ip default):8500
+
+docker run -d swarm join --advertise $(docker-machine ip master-agent):2376 consul://$(docker-machine ip default):8500
+
+# prepnut na SwarmNody a spustit znovu swarm join
+eval $(docker-machine env agent) 
+docker run -d swarm join --advertise $(docker-machine ip agent):2376 consul://$(docker-machine ip default):8500
+
+
+
+eval $(docker-machine env --swarm master-agent)
+docker info
+docker ps
+
+
+
+docker network create --driver overlay DPS 
+------------------------------------------------------------------------------------
+### spustenie kontajnerov vo swarme
+eval $(docker-machine env --swarm master-agent)
+docker-compose build
+docker-compose up -d
+
+#vypnutie kontajnerov
+docker-compose down
+
+
+
+
+
+
+
+chyby:
+
+ERROR: 500 Internal Server Error: service endpoint with name dps-kibana already exists
+docker network disconnect -f DPS dps-kibana
+
+
+
+
+
