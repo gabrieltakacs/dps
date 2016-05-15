@@ -80,7 +80,7 @@ class BootStrap {
                     i++;
                 }
             }
-            s += " [frontends]\n" +
+             s += " [frontends]\n" +
                     "   [frontends.frontend1]\n" +
                     "   backend = \"backend1\"\n" +
                     "   [frontends.frontend1.routes.proxy]\n" +
@@ -90,7 +90,17 @@ class BootStrap {
                     "   backend = \"backend1\"\n" +
                     "   [frontends.frontend2.routes.proxy]\n" +
                     "   rule = \"Host\"\n" +
-                    "   value = \"192.168.99.100\"\n";
+                    "   value = \"192.168.99.101\"\n";
+           s += "   [frontends.frontend3]\n" +
+                    "   backend = \"backend1\"\n" +
+                    "   [frontends.frontend3.routes.proxy]\n" +
+                    "   rule = \"Host\"\n" +
+                    "   value = \"192.168.99.102\"\n";
+           s += "   [frontends.frontend4]\n" +
+                    "   backend = \"backend1\"\n" +
+                    "   [frontends.frontend4.routes.proxy]\n" +
+                    "   rule = \"Host\"\n" +
+                    "   value = \"192.168.99.103\"\n";
             file.createNewFile();
             file.write(s);
         } catch(Exception e) {

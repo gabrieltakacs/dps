@@ -10,7 +10,8 @@ EXPOSE 3181
 RUN mkdir /etc/traefik
 
 COPY app/proxy /proxy/
-#RUN cd /proxy && ./gradlew war
+
+RUN cd /proxy && ./gradlew war
 RUN cp /proxy/build/libs/*.war /opt/tomcat/webapps/
 RUN rm -r proxy
 RUN export CATALINA_OPTS="-server -Dfile.encoding=UTF-8"
@@ -25,6 +26,7 @@ ADD config/zabbix.conf /etc/zabbix/zabbix_agentd.conf
 
 ADD run.sh /run.sh
 RUN chmod 777 /run.sh
+COPY config/ /etc/traefik/
 CMD ["/run.sh"]
 
 
