@@ -1,93 +1,79 @@
 import dynamo.DynamoParams
+import dynamo.Replicator
 import dynamo.Zookeeper
 import org.apache.curator.framework.CuratorFramework
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.RetryNTimes
-import org.apache.curator.x.discovery.ServiceDiscovery
-import org.apache.curator.x.discovery.ServiceDiscoveryBuilder
+import org.apache.curator.framework.recipes.locks.InterProcessMutex
+import org.apache.curator.framework.state.ConnectionState
 import org.apache.curator.x.discovery.ServiceInstance
-import org.apache.curator.x.discovery.ServiceProvider
-import org.apache.curator.x.discovery.UriSpec
+import org.apache.curator.x.discovery.details.ServiceCacheListener
 
 class BootStrap {
 
     def init = { servletContext ->
 
-        registerInZookeeper();
+        CuratorFramework curatorFramework = Zookeeper.initCuratorFramework();
+        InterProcessMutex mutex = new InterProcessMutex(curatorFramework, "/lock");
+        println("Bootstrap - accquiring lock")
+        mutex.acquire()
+        println("Bootstrap - lock acquired")
+        Zookeeper.initServiceProvider();
         initDynamo();
+        Zookeeper.registerServer();
+        mutex.release();
+        println("Bootstrap - lock released")
+        Zookeeper.getServiceCache().addListener(new ServiceCacheListener() {
+            @Override
+            void cacheChanged() {
+                println("ServiceCacheListener - cacheChanged event");
+                Replicator.getInstance().process();
+            }
+
+            @Override
+            void stateChanged(CuratorFramework client, ConnectionState newState) {
+                println("ServiceCacheListener - stateChanged event");
+                println(client+" - "+newState);
+            }
+        });
+        new Thread() {
+            public void run() {
+                Replicator.getInstance().process();
+            }
+        }.start();
     }
 
     def destroy = {
     }
 
-    private static void registerInZookeeper() {
-        CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
-        curatorFramework.start()
-        ServiceInstance<Void> serviceInstance = ServiceInstance.builder()
-                .uriSpec(new UriSpec("{scheme}://{address}:{port}"))
-                .address(InetAddress.getLocalHost().getHostAddress())
-                .port(8080)
-                .name("servers")
-                .build()
-        ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder.builder(Void)
-                .basePath("dynamoProxy")
-                .client(curatorFramework)
-                .thisInstance(serviceInstance)
-                .build()
-                .start()
-        setServiceProvider(curatorFramework);
-    }
-
-    private static void setServiceProvider(CuratorFramework curatorFramework) {
-        ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder
-                .builder(Void)
-                .basePath("dynamoProxy")
-                .client(curatorFramework).build()
-        serviceDiscovery.start()
-        ServiceProvider serviceProvider = serviceDiscovery
-                .serviceProviderBuilder()
-                .serviceName("servers")
-                .build()
-        serviceProvider.start();
-        Zookeeper.setServiceProvider(serviceProvider);
-    }
-
     private static void initDynamo() {
+        println("init dynamo start");
         ArrayList<Integer> list = new ArrayList<Integer>();
         for(ServiceInstance s:Zookeeper.serviceProvider.allInstances) {
             if (!InetAddress.getLocalHost().getHostAddress().equals(s.address)) {
-                println("init dynamo start");
-                String address = s.buildUriSpec()
-                URL url = (address + "/api/v1.0/clockNumber").toURL();
-                try {
-                    list.add(Integer.parseInt(url.getText([connectTimeout: 1000, readTimeout: 1000])));
-                } catch (Exception e) {
-                    println("init dynamo error: "+e.getMessage());
-                }
+                list.add(Integer.parseInt(s.payload as String));
             }
         }
-        int myNumber;
+        println("Bootstrap - peers id: "+list);
+        int myNumber = 0;
         if(list.isEmpty()) {
             myNumber = 0;
-            println("first node - 0");
-        } else if(list.size() == 1) {
-            myNumber = DynamoParams.maxClockNumber/2;
-            println("second node - "+myNumber);
+            println("Bootstrap - server id 0 (first server)");
         } else {
-            int most = 0;
+            int most = -1;
             list.sort();
-            println(list.toString());
             for(int i=0;i<list.size();i++) {
-                int next;
-                if(i<list.size()-1) next = list.get(i+1) else next = DynamoParams.maxClockNumber;
-                if(most < (next - list.get(i))) {
-                    most = (next - list.get(i));
-                    myNumber = (next+list.get(i))/2;
+                int actual = list.get(i);
+                int next = list.get((i+1)%list.size());
+                int distance = (DynamoParams.maxClockNumber - actual + next) % DynamoParams.maxClockNumber;
+                if(most < distance) {
+                    most = distance;
+                    if(distance == 0) {
+                        distance += DynamoParams.maxClockNumber;
+                    }
+                    myNumber = ((actual + (distance / 2)) as Integer) % DynamoParams.maxClockNumber;
                 }
             }
         }
-
+        println("Bootstrap - server id "+myNumber)
         DynamoParams.setMyNumber(myNumber);
-        DynamoParams.setNextNumber(DynamoParams.maxClockNumber);
     }
 }

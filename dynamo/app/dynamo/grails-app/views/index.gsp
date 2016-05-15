@@ -95,7 +95,10 @@
     <div class="row">
         <div class="col-lg-6 col-md-6 col-xs-6 thumb">
             <div class="well">
-                <ul id="serverinfo">
+                <ul>
+                    <g:each var="info" in="${serverInfo}">
+                        <li>${info.key}: ${info.value}</li>
+                    </g:each>
                 </ul>
             </div>
         </div>
@@ -121,7 +124,7 @@
         <div class="col-lg-6 col-md-6 col-xs-6 ">
             <div class="panel panel-default">
                 <div class="panel-body form-horizontal">
-                    <g:form method="post" class="form-horizontal" controller="main">
+                    <g:form method="post" class="form-horizontal" url="/api/v1.0/post">
                         <div class="form-group">
                             <div class="col-sm-3 >
                                 <label control-label">Key:
@@ -135,7 +138,7 @@
                             <div class="col-sm-3 >
                                 <label control-label">Value:
                             </div>
-                            <div class="col-sm-8">
+                            <div class="col-sm-9">
                                 <input type="text" class="form-control" name="value"/>
                             </div>
                         </div>
@@ -171,25 +174,13 @@
 
 </div>
 
-</body>
-
 <script>
-    $.ajax({
-        dataType: "json",
-        url: "${createLink(controller:'Main', action: 'info')}", success: function (result) {
-            var res = '';
-            $.each(result, function (k, v) {
-                res += "<li>" + k + ": " + v + "</li>";
-            });
-            $("#serverinfo").html(res);
-        }
-    });
     function getData() {
         var data = {"key": $("#input-key").val()};
         $.ajax({
             dataType: "json",
             data: data,
-            url: "${createLink(controller:'Main', action: 'getData')}",
+            url: "${createLink(controller:'Dynamo', action: 'getData')}",
             success: function (result) {
                 var res = '';
                 $.each(result, function (k, v) {
@@ -201,4 +192,7 @@
     }
 
 </script>
+
+</body>
+
 </html>

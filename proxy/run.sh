@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+zabbix_agentd -c /etc/zabbix/zabbix_agentd.conf
+touch /rules.toml
 /opt/tomcat/bin/catalina.sh start
-touch /var/log/keepalive
-tail -f /var/log/keepalive
+chmod 777 /etc/traefik -R
+./traefik

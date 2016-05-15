@@ -10,6 +10,13 @@ appender('STDOUT', ConsoleAppender) {
     }
 }
 
+appender('STDERR', ConsoleAppender) {
+    target = 'System.err'
+    encoder(PatternLayoutEncoder) {
+        pattern = "%level %logger - %msg%n"
+    }
+}
+
 appender("FILE", FileAppender) {
     file = "logFile.log"
     append = false
@@ -18,16 +25,7 @@ appender("FILE", FileAppender) {
     }
 }
 
-appender('LOGSTASH', LogstashTcpSocketAppender) {
-    destination = "logstash:5000"
-    /*encoder(PatternLayoutEncoder) {
-        pattern = "%level %logger - %msg%n"
-    }*/
-    encoder(LogstashEncoder)
-}
-
-root(DEBUG, ['FILE', 'LOGSTASH'])
-//root(ERROR, ['STDOUT'])
+root(DEBUG, ['FILE', 'STDERR'])
 
 def targetDir = BuildSettings.TARGET_DIR
 if (Environment.isDevelopmentMode() && targetDir) {

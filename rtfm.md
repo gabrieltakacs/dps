@@ -1,17 +1,3 @@
-# Aktualny stav
-* Mame vytvorene vsetky containery s potrebnymi vecami
-* Mame nakodene vlastne jednoduche proxy
-* Mame nakodene "dynamo", ktore dokaze prijimat requesty, ale nic s nimi zatial nerobi
-* Mame rozbehane elstash
-
-# Aktualne problemy
-
-# Todo:
-* Otestovat logovanie
-* Spravit, aby dynamo vedelo preposielat requesty na ine dynama
-* Zistit, ci to musi bezat na dvoch separatnych PCs, alebo ci sa ako virtualka mysli docker container
-* Vsetko skontrolovat a pripravit na odovzdavanie
-
 # Docker
 
 ## Docker intercontainer networking
@@ -42,24 +28,4 @@
 * Delete all containers
 * docker rm $(docker ps -a -q)
 
-# dynamo
-* dynamo beží na http://127.0.0.1:8080/dynamo-0.1/
-* stiahnuť:
-
-    intellij (lepšie ultimate)
-
-    Java 8 sdk
-
-    http://groovy-lang.org/download.html
-
-    https://grails.org/download.html
-
-* otvoriť intellij - open dps project
-* súbor .bashrc v home adresári - pridať:
-
-GRAILS_HOME=/home/miro/grails-3.1.4
-
-export GRAILS_HOME
-
-PATH=$PATH:$GRAILS_HOME/bin
 

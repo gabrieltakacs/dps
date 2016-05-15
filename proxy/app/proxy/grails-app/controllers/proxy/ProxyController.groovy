@@ -1,21 +1,22 @@
 package proxy
 
+import grails.converters.JSON
 import org.apache.curator.framework.CuratorFramework
 import org.apache.curator.framework.CuratorFrameworkFactory
 import org.apache.curator.retry.RetryNTimes
 import org.apache.curator.x.discovery.ServiceDiscovery
 import org.apache.curator.x.discovery.ServiceDiscoveryBuilder
+import org.apache.curator.x.discovery.ServiceInstance
 import org.apache.curator.x.discovery.ServiceProvider
 
 class ProxyController {
 
     static ServiceProvider serviceProvider
     static {
-        //log.info("starting service discovery");
         CuratorFramework curatorFramework = CuratorFrameworkFactory.newClient("zookeeper:2181", new RetryNTimes(5, 1000))
         curatorFramework.start()
-        ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder
-                .builder(Void)
+        ServiceDiscovery<String> serviceDiscovery = ServiceDiscoveryBuilder
+                .builder(String)
                 .basePath("dynamoProxy")
                 .client(curatorFramework).build()
         serviceDiscovery.start()
@@ -24,30 +25,19 @@ class ProxyController {
                 .serviceName("servers")
                 .build()
         serviceProvider.start()
-        //log.info("service discovery started");
-    }
-
-    def favicon() {
-        render "404";
     }
 
     def index() {
-        def instance = serviceProvider.getInstance()
-        if(instance != null) {
-            String address = instance.buildUriSpec()
-            String uri = request.getRequestURI().toString();
-            URL url = (address + uri).toURL();
-            log.info("Redirecting to "+url);
-            try {
-                String response = url.getText("UTF-8")
-                render response
-            } catch (Exception e) {
-                log.error("ERROR while redirecting",e)
-                render "ERROR: "+e.getMessage();
-            }
-        } else {
-            log.error("ERROR: no instance found")
-            render "ERROR: no instance found!"
+        Map obj = new LinkedHashMap()
+        obj.put("server IP", InetAddress.getLocalHost().getHostAddress());
+        int i = 0;
+        for (ServiceInstance s : serviceProvider.allInstances) {
+            i++;
+            obj.put("node " + i + " IP", s.address);
+            obj.put("node " + i + " ID", s.payload);
         }
+        def json = obj as JSON
+        json.prettyPrint = true
+        json.render response
     }
 }
